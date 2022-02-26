@@ -28,7 +28,7 @@ class Category:
     # visualization
     color_map : str = "gray"
     blending : str = "translucent"
-    tool_tip : str = None
+    tool_tip : str = ""
     tools_menu : str = None
 
 
