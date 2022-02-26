@@ -6,6 +6,7 @@ import napari
 from napari.layers import Image, Labels, Layer
 from typing_extensions import Annotated
 import inspect
+from functools import lru_cache
 
 ImageInput = Annotated[Image, {"label": "Image"}]
 LayerInput = Annotated[Layer, {"label": "Image or labels"}]
@@ -199,14 +200,45 @@ CATEGORIES = {
 
 
 def attach_tooltips():
+    """
+    Attach tooltips to categories which contain all functions
+    This is necessary so that the search later finds operations by name in categories.
+    The search searches in the tooltip.
+
+    Todo: This only works if the tools-menu is initizaled.
+          We should alternatively search for menu names + functions in npe2.
+    """
     # attach tooltips
     for k, c in CATEGORIES.items():
         choices = operations_in_menu(c)
         c.tool_tip = c.description + "\n\nOperations:\n* " + "\n* ".join(choices).replace("_", " ")
 
-from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def all_operations():
+    """Get a dictionary of all compatible functions of installed plugins
+
+    Returns
+    -------
+    dict(str:callable)
+        Dictionary of name-function pairs
+
+    """
+    # harvest functions from clesperanto
+    cle_ops = collect_cle()
+
+    # harvest functions from napari-tools-menu
+    tools_ops = collect_tools()
+
+    # combine all
+    all_ops = {**cle_ops, **tools_ops}
+    return all_ops
+
 
 def collect_cle():
+    """
+    Collect all functions from clesperanto that are annotated with "in assistant"
+    """
     try:
         import pyclesperanto_prototype as cle
     except ImportError:
@@ -225,6 +257,9 @@ def collect_cle():
 
 
 def collect_tools():
+    """
+    Collect all functions that process images (no dock-widgets and actions) from napari-tools-menu
+    """
     from napari_tools_menu import ToolsMenu
 
     allowed_types = ["napari.types.LabelsData", "napari.types.ImageData", "int", "float", "str", "bool",
@@ -260,14 +295,19 @@ def collect_tools():
     return result
 
 
-@lru_cache(maxsize=1)
-def all_operations():
-    cle_ops = collect_cle()
-    tools_ops = collect_tools()
-    all_ops = {**cle_ops, **tools_ops}
-    return all_ops
-
 def filter_operations(menu_name):
+    """
+    Find functions that contain a given name
+    Parameters
+    ----------
+    menu_name: str
+        case sensitive search string
+
+    Returns
+    -------
+    dict(str:callable)
+        Dictionary of name-function pairs
+    """
     result = {}
     for k,v in all_operations().items():
         if menu_name in k:
@@ -275,6 +315,19 @@ def filter_operations(menu_name):
     return result
 
 def operations_in_menu(category, search_string: str = None):
+    """
+    Return all functions in a given category that contain a
+    given search string.
+
+    Parameters
+    ----------
+    category
+    search_string
+
+    Returns
+    -------
+    list[function]
+    """
     menu_name = category.tools_menu
     choices = filter_operations(menu_name)
     if search_string is not None and len(search_string) > 0:
@@ -318,6 +371,9 @@ def operations_in_menu(category, search_string: str = None):
 
 
 def find_function(op_name):
+    """
+    Find a function by name (in menu)
+    """
     all_ops = all_operations()
     cle_function = None
     for k, f in all_ops.items():
@@ -328,7 +384,10 @@ def find_function(op_name):
     return cle_function
 
 
-def filter_categories(search_string:str=""):
+def filter_categories(search_string: str = ""):
+    """Return all categories that have a function that contains a
+    given search string in their name.
+    """
     if search_string is None or len(search_string) == 0:
         search_string = ""
 
