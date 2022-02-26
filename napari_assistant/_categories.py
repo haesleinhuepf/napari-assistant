@@ -230,8 +230,11 @@ def all_operations():
     # harvest functions from napari-tools-menu
     tools_ops = collect_from_tools_menu_if_installed()
 
+    # harvest from napari-plugin-enginge-2
+    npe2_ops = collect_from_npe2_if_installed()
+
     # combine all
-    all_ops = {**cle_ops, **tools_ops}
+    all_ops = {**cle_ops, **tools_ops, **npe2_ops}
     return all_ops
 
 
@@ -296,6 +299,47 @@ def collect_from_tools_menu_if_installed():
             result[k] = f
 
     return result
+
+
+def collect_from_npe2_if_installed():
+    try:
+        import npe2
+    except ImportError:
+        print("Assistant skips harvesting npe2 as it's not installed.")
+        return {}
+    pm = npe2.PluginManager.instance()
+
+    result = {}
+    for pname, item in pm._manifests.items():
+        if item.contributions.widgets is not None:
+            for c in item.contributions.widgets:
+                wname = c.display_name
+                # only harvest items which look like a menu decription
+                # todo: as soon as npe2 supports menus, change this here
+                if ">" in pname or ">" in wname:
+                    # print("loading ", pname, wname)
+
+                    t = get_widget_contribution(pname, wname)
+                    if t is not None:
+                        factory = t[0]
+                        menu = t[1]
+                        kwargs = {}
+                        w = factory(**kwargs)
+                        result[menu] = w._function
+    return result
+
+
+# source: https://github.com/napari/napari/blob/1363bd47da668a5826a75a73be93f7a7f8042fd7/napari/plugins/_npe2.py#L91
+def get_widget_contribution(
+        plugin_name: str, widget_name: str = None
+):
+    import npe2
+    for contrib in npe2.PluginManager.instance().iter_widgets():
+        if contrib.plugin_name == plugin_name and (
+                not widget_name or contrib.display_name == widget_name
+        ):
+            return contrib.get_callable(), contrib.display_name
+    return None
 
 
 def filter_operations(menu_name: str):
