@@ -1,40 +1,15 @@
 from __future__ import annotations
-
 from pathlib import Path
-
-from typing import TYPE_CHECKING, Dict, Tuple, Callable
+from typing import Callable
 from warnings import warn
-import napari
-
 from qtpy.QtWidgets import QFileDialog, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QLabel, QSpinBox
-from qtpy.QtGui import QCursor, QIcon
-
+from qtpy.QtGui import QCursor
 from typing import Union
-
-
 from .._categories import CATEGORIES, Category, filter_categories
 from ._button_grid import ButtonGrid
-from ._category_widget import (
-    OP_ID,
-    OP_NAME_PARAM,
-    VIEWER_PARAM,
-    make_gui_for_category,
-    num_positional_args
-)
+from ._category_widget import make_gui_for_category
+from napari.viewer import Viewer
 
-if TYPE_CHECKING:
-    from magicgui.widgets import FunctionGui
-    from napari.layers import Layer
-    from napari.viewer import Viewer
-
-from napari import __version__ as napari_version
-from packaging.version import parse as parse_version
-from napari_tools_menu import register_dock_widget
-
-npv = parse_version(napari_version)
-NAP048 = (npv.major, npv.minor, npv.micro) >= (0, 4, 8)
-
-@register_dock_widget(menu="Utilities > Assistant (na)")
 class Assistant(QWidget):
     """The main Assistant widget.
 
@@ -76,7 +51,6 @@ class Assistant(QWidget):
 
         self.seach_field.textChanged.connect(text_changed)
         text_changed()
-
 
         # create menu
         self.actions = [
@@ -249,3 +223,4 @@ class Assistant(QWidget):
         # get the workflow, should one be installed
         workflow_manager = WorkflowManager.install(self._viewer)
         _io_yaml_v1.save_workflow(filename, workflow_manager.workflow)
+

@@ -225,24 +225,24 @@ def all_operations():
 
     """
     # harvest functions from clesperanto
-    cle_ops = collect_cle()
+    cle_ops = collect_from_pyclesperanto_if_installed()
 
     # harvest functions from napari-tools-menu
-    tools_ops = collect_tools()
+    tools_ops = collect_from_tools_menu_if_installed()
 
     # combine all
     all_ops = {**cle_ops, **tools_ops}
     return all_ops
 
 
-def collect_cle():
+def collect_from_pyclesperanto_if_installed():
     """
     Collect all functions from clesperanto that are annotated with "in assistant"
     """
     try:
         import pyclesperanto_prototype as cle
     except ImportError:
-        print("Skipping clesperanto as it's not installed.")
+        print("Assistant skips harvesting pyclesperanto as it's not installed.")
         return {}
 
     result = {}
@@ -256,11 +256,15 @@ def collect_cle():
     return result
 
 
-def collect_tools():
+def collect_from_tools_menu_if_installed():
     """
     Collect all functions that process images (no dock-widgets and actions) from napari-tools-menu
     """
-    from napari_tools_menu import ToolsMenu
+    try:
+        from napari_tools_menu import ToolsMenu
+    except ImportError:
+        print("Assistant skips harvesting tools menu as it's not installed.")
+        return {}
 
     allowed_types = ["napari.types.LabelsData", "napari.types.ImageData", "int", "float", "str", "bool",
                      "napari.viewer.Viewer", "napari.Viewer"]
@@ -291,11 +295,10 @@ def collect_tools():
 
             result[k] = f
 
-    #print(allowed_types)
     return result
 
 
-def filter_operations(menu_name):
+def filter_operations(menu_name: str):
     """
     Find functions that contain a given name
     Parameters
@@ -316,17 +319,8 @@ def filter_operations(menu_name):
 
 def operations_in_menu(category, search_string: str = None):
     """
-    Return all functions in a given category that contain a
+    Return all functions as list in a given category that contain a
     given search string.
-
-    Parameters
-    ----------
-    category
-    search_string
-
-    Returns
-    -------
-    list[function]
     """
     menu_name = category.tools_menu
     choices = filter_operations(menu_name)
@@ -334,8 +328,6 @@ def operations_in_menu(category, search_string: str = None):
         choices = [c for c in choices if search_string in c.lower()]
     choices = [c.split(">")[1].strip() for c in choices]
     choices = sorted(choices, key=str.casefold)
-
-    #print("\n", category.name)
 
     # check if the image parameters fit
     result = []
@@ -364,8 +356,6 @@ def operations_in_menu(category, search_string: str = None):
         # only keep the function in this category if it matches
         if num_image_parameters_in_category == num_image_parameters_in_function:
             result.append(name)
-        #else:
-            #print(name, num_image_parameters_in_category, num_image_parameters_in_function)
 
     return result
 
@@ -375,13 +365,13 @@ def find_function(op_name):
     Find a function by name (in menu)
     """
     all_ops = all_operations()
-    cle_function = None
+    found_function = None
     for k, f in all_ops.items():
         if op_name in k:
-            cle_function = f
-    if cle_function is None:
+            found_function = f
+    if found_function is None:
         print("No function found for", op_name)
-    return cle_function
+    return found_function
 
 
 def filter_categories(search_string: str = ""):
