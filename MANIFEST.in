@@ -1,0 +1,3 @@
+recursive-include napari_assistant *.png
+recursive-include napari_assistant *.tif
+recursive-exclude docs *
