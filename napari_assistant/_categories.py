@@ -330,19 +330,22 @@ def find_function(op_name):
 
 def filter_categories(search_string:str=""):
     if search_string is None or len(search_string) == 0:
-        return CATEGORIES
+        search_string = ""
 
     from copy import copy
 
-    result = {}
+    all_categories = {}
     for k, c in CATEGORIES.items():
         if not callable(c):
             if search_string in c.tool_tip.lower():
                 new_c = copy(c)
-                result[k] = new_c
+                all_categories[k] = new_c
 
-    for k, c in result.items():
+    result = {}
+    for k, c in all_categories.items():
         choices = operations_in_menu(c, search_string)
         c.tool_tip = c.description + "\n\nOperations:\n* " + "\n* ".join(choices).replace("_", " ")
+        if len(choices) > 0:
+            result[k] = c
 
     return result

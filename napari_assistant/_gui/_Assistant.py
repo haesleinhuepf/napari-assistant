@@ -75,6 +75,7 @@ class Assistant(QWidget):
             icon_grid.addItems(filter_categories(search_string))
 
         self.seach_field.textChanged.connect(text_changed)
+        text_changed()
 
 
         # create menu
