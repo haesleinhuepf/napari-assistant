@@ -53,9 +53,4 @@ setup(
         "Intended Audience :: Science/Research",
         "Development Status :: 3 - Alpha",
     ],
-    entry_points={
-        "napari.plugin": [
-            "napari-assistant = napari_assistant._napari_plugin",
-        ],
-    },
 )
