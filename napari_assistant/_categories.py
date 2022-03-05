@@ -429,16 +429,18 @@ def filter_categories(search_string: str = ""):
 
     all_categories = {}
     for k, c in CATEGORIES.items():
-        if not callable(c):
-            if search_string in c.tool_tip.lower():
-                new_c = copy(c)
-                all_categories[k] = new_c
+        if callable(c) or search_string in c.tool_tip.lower():
+            new_c = copy(c)
+            all_categories[k] = new_c
 
     result = {}
     for k, c in all_categories.items():
-        choices = operations_in_menu(c, search_string)
-        c.tool_tip = c.description + "\n\nOperations:\n* " + "\n* ".join(choices).replace("_", " ")
-        if len(choices) > 0:
+        if callable(c):
             result[k] = c
+        else:
+            choices = operations_in_menu(c, search_string)
+            c.tool_tip = c.description + "\n\nOperations:\n* " + "\n* ".join(choices).replace("_", " ")
+            if len(choices) > 0:
+                result[k] = c
 
     return result
