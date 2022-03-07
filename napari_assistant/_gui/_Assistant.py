@@ -37,6 +37,7 @@ class Assistant(QWidget):
         self._viewer.grid.stride = -1
 
         CATEGORIES["Generate code..."] = self._code_menu
+        CATEGORIES["Workflow IO"] = self._workflow_menu
 
         # build GUI
         icon_grid = ButtonGrid(self)
@@ -55,7 +56,12 @@ class Assistant(QWidget):
         # create menu
         self.actions = [
             ("Copy to clipboard", self.to_clipboard),
-            ("Export workflow to file", self.to_file)
+        ]
+
+        # create workflow menu
+        self.workflow_actions = [
+                                 ("Export workflow to file", self.to_file),
+                                 ("Load workflow from file", self.load_workflow)
         ]
 
         # add Send to script editor menu in case it's installed
@@ -102,6 +108,16 @@ class Assistant(QWidget):
         menu = QMenu(self)
 
         for name, cb in self.actions:
+            submenu = menu.addAction(name)
+            submenu.triggered.connect(cb)
+
+        menu.move(QCursor.pos())
+        menu.show()
+
+    def _workflow_menu(self):
+        menu = QMenu(self)
+
+        for name, cb in self.workflow_actions:
             submenu = menu.addAction(name)
             submenu.triggered.connect(cb)
 
@@ -223,4 +239,17 @@ class Assistant(QWidget):
         # get the workflow, should one be installed
         workflow_manager = WorkflowManager.install(self._viewer)
         _io_yaml_v1.save_workflow(filename, workflow_manager.workflow)
+
+    def load_workflow(self, filename=None):
+        from napari_workflows import _io_yaml_v1
+        from .. _workflow_io_utility import initialise_root_functions, load_remaining_workflow
+
+        if not filename:
+            filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
+        self.workflow = _io_yaml_v1.load_workflow(filename)
+
+        initialise_root_functions(self.workflow,
+                                  self._viewer)
+        load_remaining_workflow(workflow=self.workflow,
+                                viewer=self._viewer)
 
