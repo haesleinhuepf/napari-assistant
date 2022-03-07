@@ -32,7 +32,7 @@ with open(filename) as f:
 setup(
     name="napari-assistant",
     version="0.1.0",
-    author="Robert Haase",
+    author="Robert Haase, Ryan Savill",
     author_email="robert.haase@tu-dresden.de",
     description="A pocket calculator like interface to image processing in napari",
     license="BSD-3-Clause",
