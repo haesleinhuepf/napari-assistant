@@ -318,6 +318,7 @@ def wf_steps_with_root_as_input(workflow):
                 if isinstance(source, str):
                     if source in roots:
                         wf_step_with_rootinput.append(result)
+                        break
     return wf_step_with_rootinput
 
 def get_source_keywords_and_sources(workflow, wf_step_name):
