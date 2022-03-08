@@ -243,6 +243,12 @@ class Assistant(QWidget):
     def load_workflow(self, filename=None):
         from napari_workflows import _io_yaml_v1
         from .. _workflow_io_utility import initialise_root_functions, load_remaining_workflow
+        import warnings
+
+        layer_names = [str(lay) for lay in self._viewer.layers]
+        if not layer_names:
+            warnings.warn("No images opened. Please open an image before loading the workflow!")
+            return
 
         if not filename:
             filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
