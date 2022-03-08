@@ -51,6 +51,6 @@ setup(
         "Operating System :: OS Independent",
         "Framework :: napari",
         "Intended Audience :: Science/Research",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 2 - Pre-Alpha",
     ],
 )
