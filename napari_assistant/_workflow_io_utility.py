@@ -20,7 +20,7 @@ def initialise_root_functions(workflow, viewer):
     """
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
-    layer_names = [str(lay) for lay in viewer.layers]
+    layer_names = [lay.name for lay in viewer.layers]
 
     # iterate over root function workflow steps
     for wf_step_name in root_functions:
