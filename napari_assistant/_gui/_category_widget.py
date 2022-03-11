@@ -363,7 +363,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
 
             # notify workflow manage that something was created / updated
             try:
-                from napari_time_slicer import WorkflowManager
+                from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
                 manager.update(result_layer, find_function(op_name), *used_args)
                 #print("notified", result_layer.name, find_function(op_name))
