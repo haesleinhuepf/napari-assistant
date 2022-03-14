@@ -20,6 +20,7 @@ def initialise_root_functions(workflow, viewer):
     """
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
+    layer_names = [lay.name for lay in viewer.layers]
 
     # iterate over root function workflow steps
     for wf_step_name in root_functions:
@@ -30,20 +31,48 @@ def initialise_root_functions(workflow, viewer):
                                                   wf_step_name=wf_step_name)
         func.__signature__ = signat
 
-        # create the widget based on the adjusted function
-        widget = make_flexible_gui(func, 
-                                   viewer, 
-                                   wf_step_name= wf_step_name)
+        # create the widget based on the adjusted function and turn off autocall
+        # for functions with more than 1 input image
+        sources = workflow.sources_of(wf_step_name)
+        if len(sources) > 1:
+            widget = make_flexible_gui(func, 
+                                       viewer, 
+                                       wf_step_name,
+                                       autocall= False)
+        else:
+            widget = make_flexible_gui(func, 
+                                       viewer, 
+                                       wf_step_name)
 
-        # make a tooltip which tells the user to select the input image
-        # specified by the workflow
-        key_source_list = get_source_keywords_and_sources(workflow,
-                                                          wf_step_name)
-        for key, source in key_source_list:
-            widget[key].tooltip = f'Select {source} or equivalent'
+        # determine if all input images are in layer names
+        sources_present = True
+        for source in sources:
+            if source not in layer_names:
+                sources_present = False
 
-        # add the final widget to the napari viewer
-        viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
+        # if all input images are present in the layers we can preselct them
+        if sources_present:
+            viewer.window.add_dock_widget(widget, name= wf_step_name[10:])
+            set_choices(workflow= workflow,
+                        wf_step_name= wf_step_name,
+                        viewer= viewer,
+                        widget= widget)
+
+        # if the input images aren't present we will leave the dropdowns
+        # open to chose the right image
+        else:
+            # make a tooltip which tells the user to select the input image
+            # specified by the workflow
+            key_source_list = get_source_keywords_and_sources(workflow,
+                                                            wf_step_name)
+            for key, source in key_source_list:
+                widget[key].tooltip = f'Select {source} or equivalent'
+
+            # add the final widget to the napari viewer
+            viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
+
+        # calling the widget with the correct input images
+        widget()
 
 def load_remaining_workflow(workflow, viewer):
     """
@@ -289,6 +318,7 @@ def wf_steps_with_root_as_input(workflow):
                 if isinstance(source, str):
                     if source in roots:
                         wf_step_with_rootinput.append(result)
+                        break
     return wf_step_with_rootinput
 
 def get_source_keywords_and_sources(workflow, wf_step_name):
