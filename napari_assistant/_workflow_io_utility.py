@@ -4,8 +4,14 @@ from magicgui import magicgui
 from functools import wraps
 from napari.utils._magicgui import _make_choice_data_setter
 from napari.types import ImageData, LabelsData
+from napari_workflows import Workflow, WorkflowManager
+from napari import Viewer
 
-def initialise_root_functions(workflow, viewer):
+def initialise_root_functions(
+    workflow: Workflow, 
+    viewer: Viewer, 
+    undo_redo_loading: bool = False
+    ):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
@@ -18,6 +24,8 @@ def initialise_root_functions(workflow, viewer):
     viewer:
         napari.Viewer instance
     """
+    undos = 0
+
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
     layer_names = [lay.name for lay in viewer.layers]
@@ -43,6 +51,7 @@ def initialise_root_functions(workflow, viewer):
             widget = make_flexible_gui(func, 
                                        viewer, 
                                        wf_step_name)
+            undos += 1
 
         # determine if all input images are in layer names
         sources_present = True
@@ -73,8 +82,15 @@ def initialise_root_functions(workflow, viewer):
 
         # calling the widget with the correct input images
         widget()
+        undos += 1
+    if undo_redo_loading:
+        return undos
 
-def load_remaining_workflow(workflow, viewer):
+def load_remaining_workflow(
+    workflow: Workflow, 
+    viewer: Viewer, 
+    undo_redo_loading: bool = False
+    ):
     """
     Loads the remaining workflow once initialise_root_functions has been called with
     the same workflow and the same napari viewer
@@ -86,6 +102,7 @@ def load_remaining_workflow(workflow, viewer):
     viewer:
         napari.Viewer instance
     """
+    undos = 0
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
     # get the layer object from the napari viewer
@@ -135,6 +152,7 @@ def load_remaining_workflow(workflow, viewer):
                 widget = make_flexible_gui(func, 
                                             viewer, 
                                             follower)
+                undos += 1
 
             # add the final widget to the napari viewer and set the input images in
             # the dropdown to the specified input images
@@ -146,6 +164,7 @@ def load_remaining_workflow(workflow, viewer):
 
             # calling the widget with the correct input images
             widget()
+            undos += 1
 
             # finding new followers of the current workflow step
             new_followers = workflow.followers_of(follower)
@@ -155,6 +174,27 @@ def load_remaining_workflow(workflow, viewer):
             for new_follower in new_followers:
                 if new_follower not in followers[i+1:]:
                     followers.append(new_follower)
+    if undo_redo_loading:
+        return undos
+
+def load_workflow_undo_redo(
+    new_workflow: Workflow, 
+    viewer: Viewer):
+    # init
+    manager = WorkflowManager.install(viewer)
+
+    # loading root functions
+    init_undos = initialise_root_functions(new_workflow,viewer,undo_redo_loading=True)
+    #for nothing in range(init_undos):
+    #    manager.undo_redo_controller.undo()
+    print(f'undos initialisation: {init_undos}') # TODO remove
+    # loading remaining functions
+    init_undos = load_remaining_workflow(new_workflow,viewer,undo_redo_loading=True)
+    #for nothing in range(init_undos):
+    #    manager.undo_redo_controller.undo()
+    print(f'undos remaining workflow: {init_undos}') # TODO remove
+    
+
 
 def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
     """
@@ -207,12 +247,8 @@ def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
 
         if target_layer is not None:
             # update the workflow manager in case it's installed
-            try:
-                from napari_workflows import WorkflowManager
-                workflow_manager = WorkflowManager.install(viewer)
-                workflow_manager.update(target_layer, func, *iargs, **ikwargs)
-            except ImportError:
-                pass
+            workflow_manager = WorkflowManager.install(viewer)
+            workflow_manager.update(target_layer, func, *iargs, **ikwargs) 
 
             return None
         else:

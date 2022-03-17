@@ -222,13 +222,13 @@ def _show_result(
     try:
         # look for an existing layer
         layer = next(x for x in viewer.layers if isinstance(x.metadata, dict) and x.metadata.get(OP_ID) == op_id)
-        logger.debug(f"updating existing layer: {layer}, with id: {op_id}")
+        # logger.debug(f"updating existing layer: {layer}, with id: {op_id}")
         layer.data = data
         layer.name = name
         # layer.translate = translate
     except StopIteration:
         # otherwise create a new one
-        logger.debug(f"creating new layer for id: {op_id}")
+        # logger.debug(f"creating new layer for id: {op_id}")
         add_layer = getattr(viewer, f"add_{layer_type}")
         kwargs = dict(name=name, metadata={OP_ID: op_id})
         if layer_type == "image":
