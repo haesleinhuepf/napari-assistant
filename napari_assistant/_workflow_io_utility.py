@@ -9,9 +9,7 @@ from napari import Viewer
 
 def initialise_root_functions(
     workflow: Workflow, 
-    viewer: Viewer, 
-    undo_redo_loading: bool = False
-    ):
+    viewer: Viewer):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
@@ -24,8 +22,6 @@ def initialise_root_functions(
     viewer:
         napari.Viewer instance
     """
-    undos = 0
-
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
     layer_names = [lay.name for lay in viewer.layers]
@@ -51,7 +47,6 @@ def initialise_root_functions(
             widget = make_flexible_gui(func, 
                                        viewer, 
                                        wf_step_name)
-            undos += 1
 
         # determine if all input images are in layer names
         sources_present = True
@@ -82,15 +77,10 @@ def initialise_root_functions(
 
         # calling the widget with the correct input images
         widget()
-        undos += 1
-    if undo_redo_loading:
-        return undos
 
 def load_remaining_workflow(
     workflow: Workflow, 
-    viewer: Viewer, 
-    undo_redo_loading: bool = False
-    ):
+    viewer: Viewer):
     """
     Loads the remaining workflow once initialise_root_functions has been called with
     the same workflow and the same napari viewer
@@ -102,7 +92,6 @@ def load_remaining_workflow(
     viewer:
         napari.Viewer instance
     """
-    undos = 0
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
     # get the layer object from the napari viewer
@@ -152,7 +141,6 @@ def load_remaining_workflow(
                 widget = make_flexible_gui(func, 
                                             viewer, 
                                             follower)
-                undos += 1
 
             # add the final widget to the napari viewer and set the input images in
             # the dropdown to the specified input images
@@ -164,7 +152,6 @@ def load_remaining_workflow(
 
             # calling the widget with the correct input images
             widget()
-            undos += 1
 
             # finding new followers of the current workflow step
             new_followers = workflow.followers_of(follower)
@@ -174,9 +161,8 @@ def load_remaining_workflow(
             for new_follower in new_followers:
                 if new_follower not in followers[i+1:]:
                     followers.append(new_follower)
-    if undo_redo_loading:
-        return undos
 
+# TODO remove
 def load_workflow_undo_redo(
     new_workflow: Workflow, 
     viewer: Viewer):
@@ -193,8 +179,6 @@ def load_workflow_undo_redo(
     #for nothing in range(init_undos):
     #    manager.undo_redo_controller.undo()
     print(f'undos remaining workflow: {init_undos}') # TODO remove
-    
-
 
 def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
     """
