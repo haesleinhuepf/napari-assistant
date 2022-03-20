@@ -55,6 +55,8 @@ class Assistant(QWidget):
 
         # create menu
         self.actions = [
+            ("Export Python script to file", self.to_python),
+            ("Export Jupyter Notebook", self.to_notebook),
             ("Copy to clipboard", self.to_clipboard),
         ]
 
@@ -214,6 +216,57 @@ class Assistant(QWidget):
             new_name = "image" + str(len(dict.keys()))
             dict[id] = new_name
         return dict[id]
+
+    def to_python(self, filename=None):
+        if not filename:
+            filename, _ = QFileDialog.getSaveFileName(self, "Save code as...", ".", "*.py")
+        #return Pipeline.from_assistant(self).to_jython(filename)
+
+        from napari_workflows import WorkflowManager
+        manager = WorkflowManager.install(self._viewer)
+        code = manager.to_python_code()
+
+        if filename:
+            filename = Path(filename).expanduser().resolve()
+            filename.write_text(code)
+
+
+    def to_notebook(self, filename=None, execute=True):
+        if not filename:
+            filename, _ = QFileDialog.getSaveFileName(self, "Save code as notebook...", ".", "*.ipynb")
+        #return Pipeline.from_assistant(self).to_notebook(filename)
+
+        from napari_workflows import WorkflowManager
+        manager = WorkflowManager.install(self._viewer)
+        code = manager.to_python_code()
+
+        import jupytext
+
+        # jython code is created in the jupytext light format
+        # https://jupytext.readthedocs.io/en/latest/formats.html#the-light-format
+
+        jt = jupytext.reads(code, fmt="py:light")
+        nb = jupytext.writes(jt, fmt="ipynb")
+        if filename:
+            filename = Path(filename).expanduser().resolve()
+            filename.write_text(nb)
+            # could use a NamedTemporaryFile to run this even without write
+            if execute:
+                from subprocess import Popen
+                from shutil import which
+
+                executable = "jupyter-lab"
+                if not which(executable):
+                    executable = "jupyter-notebook"
+                    if not which(executable):
+                        raise RuntimeError("Cannot find jupyter-lab or jupyter-notebook executable. Please install it using pip install jupyterlab")
+
+                try:
+                    Popen([executable, "-y", str(filename)])
+                except Exception as e:
+                    warnings.warn(f"Failed to execute notebook: {e}")
+        return nb
+
 
     def to_clipboard(self):
         import pyperclip
