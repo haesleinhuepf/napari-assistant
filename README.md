@@ -46,7 +46,7 @@ you can also send the current workflow as code to the script editor from the sam
 ## Installation
 
 It is recommended to install the napari-assistant via one of the plugins that use it as graphical user interface.
-You find a complete list of plugins that use the assistant [on the napari-hub](https://www.napari-hub.org/?search=napari-assistant&sort=relevance)
+You find a complete list of plugins that use the assistant [on the napari-hub](https://www.napari-hub.org/?search=napari-assistant&sort=relevance).
 
 ## For developers
 
