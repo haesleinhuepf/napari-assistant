@@ -51,7 +51,7 @@ You find a complete list of plugins that use the assistant [on the napari-hub](h
 ## For developers
 
 If you want to make your napari-plugin accessible from the napari-assistant, consider programming functions with a simple 
-interface that consume images, labels, integers, floats and strings. Annotate input and retun types, e.g. like this:
+interface that consume images, labels, integers, floats and strings. Annotate input and return types, e.g. like this:
 ```python
 def example_function_widget(image: "napari.types.ImageData") -> "napari.types.LabelsData":
     from skimage.filters import threshold_otsu
@@ -92,7 +92,7 @@ To put it in the right button within the napari-assistant, please use one of the
 
 You find a fully functional example [here](https://github.com/haesleinhuepf/napari-npe2-test).
 
-Last but not least, to make your napari-plugin listed in the napari-hub when searching for "napari-assistant", make sure
+Last but not least, to make your napari-plugin is listed in the napari-hub when searching for "napari-assistant", make sure
 you mention it in your `readme`.
 
 ## Feedback welcome!
