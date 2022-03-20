@@ -37,7 +37,7 @@ class Assistant(QWidget):
         self._viewer.grid.stride = -1
 
         CATEGORIES["Generate code..."] = self._code_menu
-        CATEGORIES["Workflow IO"] = self._workflow_menu
+        CATEGORIES["Save and load workflows"] = self._workflow_menu
 
         # build GUI
         icon_grid = ButtonGrid(self)
