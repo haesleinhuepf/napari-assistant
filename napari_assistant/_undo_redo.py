@@ -44,15 +44,13 @@ def undo(viewer: Viewer):
     
     # only reload if there is an undo to be performed
     if controller.undo_stack:
-        
-        controller.freeze = True # no actions recorded or performed on workflow
-        delete_workflow_widgets_layers(viewer)
-        controller.freeze = False
-        
+
         # undo workflow step: workflow is now the undone workflow
         controller.undo()
-        
+
         controller.freeze = True # no actions recorded or performed on workflow
+        delete_workflow_widgets_layers(viewer)
+        
         initialise_root_functions(workflow=workflow,
                                   viewer=viewer)
         load_remaining_workflow(workflow=workflow,
