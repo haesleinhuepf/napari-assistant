@@ -16,19 +16,19 @@ After installing one or more napari plugins that use the napari-assistant as use
 menu `Tools > Utilities > Assistant (na)` or run `naparia` from the command line. By clicking on the buttons in the 
 assistant, you can setup a workflow for processing the images.
 
-![img.png](https://github.com/haesleinhuepf/napari-assistant/blob/main/docs/napari-assistant-screenshot.png)
+![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/napari-assistant-screenshot.png)
 
 While setting up your workflow, you can at any point select a layer from the layer list (1) and change the parameters of
 the corresponding operation (2). The layer will update when you change parameters and also all subsequent operations. 
 You can also vary which operation is applied to the image (3). Also make sure the right input image layer is selected (4).
 
-![img.png](https://github.com/haesleinhuepf/napari-assistant/blob/main/docs/design_workflows.png)
+![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/design_workflows.png)
 
 ### Saving and loading workflows
 
 You can also save and load workflows to disk. 
 
-![img.png](https://github.com/haesleinhuepf/napari-assistant/blob/main/docs/save_and_load.png)
+![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/save_and_load.png)
 
 After loading a workflow, make sure that the right input images are selected.
 
@@ -36,12 +36,12 @@ After loading a workflow, make sure that the right input images are selected.
 
 The napari-assistant allows exporting the given workflow as Python script and Jupyter Notebook. 
 
-![img.png](https://github.com/haesleinhuepf/napari-assistant/blob/main/docs/code_generator.png)
+![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/code_generator.png)
 
 Furthermore, if you have the [napari-script-editor](https://www.napari-hub.org/plugins/napari-script-editor) installed,
 you can also send the current workflow as code to the script editor from the same menu.
 
-![img.png](https://github.com/haesleinhuepf/napari-assistant/blob/main/docs/napari_script_editor.png)
+![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/napari_script_editor.png)
 
 ## Installation
 
