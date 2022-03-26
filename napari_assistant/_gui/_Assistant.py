@@ -238,7 +238,7 @@ class Assistant(QWidget):
 
         from napari_workflows import WorkflowManager
         manager = WorkflowManager.install(self._viewer)
-        code = manager.to_python_code()
+        code = manager.to_python_code(notebook=True)
 
         import jupytext
 
