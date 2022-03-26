@@ -34,7 +34,7 @@ class Category:
 
 CATEGORIES = {
     "Remove noise": Category(
-        name="Removal noise",
+        name="Remove noise",
         description="Remove noise from images, e.g. by local averaging and blurring.",
         inputs=(ImageInput,),
         default_op="gaussian_blur (clesperanto)",
