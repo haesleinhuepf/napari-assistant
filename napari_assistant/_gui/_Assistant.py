@@ -173,6 +173,7 @@ class Assistant(QWidget):
         gui._auto_call = False
         # add gui to the viewer
         dw = self._viewer.window.add_dock_widget(gui, area="right", name=category.name)
+        dw._close_btn = False
         # make sure the originally active layer is the input
         try:
             gui.input0.value = input_layer
