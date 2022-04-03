@@ -39,6 +39,10 @@ class Assistant(QWidget):
         CATEGORIES["Generate code..."] = self._code_menu
         CATEGORIES["Save and load workflows"] = self._workflow_menu
 
+        CATEGORIES["Search napari hub"] = self.search_napari_hub
+        CATEGORIES["Search image.sc"] = self.search_image_sc
+        CATEGORIES["Search BIII"] = self.search_biii
+
         # build GUI
         icon_grid = ButtonGrid(self)
         icon_grid.addItems(CATEGORIES)
@@ -314,3 +318,22 @@ class Assistant(QWidget):
         load_remaining_workflow(workflow=self.workflow,
                                 viewer=self._viewer)
 
+    def search_napari_hub(self):
+        print("Search napari hub")
+        from urllib.parse import quote
+        _open_url("https://www.napari-hub.org/?search=" + quote(self.seach_field.text()) + "&sort=relevance")
+
+    def search_image_sc(self):
+        print("Search image sc")
+        from urllib.parse import quote
+        _open_url("https://forum.image.sc/search?q=napari%20" + quote(self.seach_field.text()))
+
+    def search_biii(self):
+        print("Search biii")
+        from urllib.parse import quote
+        _open_url("https://biii.eu/search?search_api_fulltext=napari%20" + quote(self.seach_field.text()))
+
+
+def _open_url(url):
+    import webbrowser
+    webbrowser.open(url, new=0, autoraise=True)

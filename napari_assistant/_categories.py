@@ -366,6 +366,8 @@ def operations_in_menu(category, search_string: str = None):
     Return all functions as list in a given category that contain a
     given search string.
     """
+    if not hasattr(category, "tools_menu"):
+        return []
     menu_name = category.tools_menu
     choices = filter_operations(menu_name)
     if search_string is not None and len(search_string) > 0:
@@ -433,14 +435,17 @@ def filter_categories(search_string: str = ""):
             new_c = copy(c)
             all_categories[k] = new_c
 
+    category_found = False
     result = {}
     for k, c in all_categories.items():
         if callable(c):
-            result[k] = c
+            if category_found ^ ("Search" in k):
+                result[k] = c
         else:
             choices = operations_in_menu(c, search_string)
             c.tool_tip = c.description + "\n\nOperations:\n* " + "\n* ".join(choices).replace("_", " ")
             if len(choices) > 0:
                 result[k] = c
+                category_found = True
 
     return result
