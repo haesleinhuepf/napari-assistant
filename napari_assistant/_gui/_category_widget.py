@@ -289,7 +289,7 @@ def _generate_signature_for_category(category: Category, search_string:str= None
     return result
 
 
-def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24) -> magicgui.widgets.FunctionGui[Layer]:
+def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
 
     Parameters
@@ -311,7 +311,14 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
         We modify it's __signature__ below.
         """
         viewer = kwargs.pop(VIEWER_PARAM, None)
-        inputs = [kwargs.pop(k) for k in list(kwargs) if k.startswith("input")]
+        inputs = []
+        for i in [kwargs.pop(k) for k in list(kwargs) if k.startswith("input")]:
+            if isinstance(i, napari.layers.Layer):
+                inputs.append(i)
+            else:
+                from napari_workflows._workflow import _get_layer_from_data
+                inputs.append(_get_layer_from_data(viewer, i))
+
         t_position = None
         if viewer is not None and len(viewer.dims.current_step) == 4:
             # in case we process a 4D-data set, we need read out the current timepoint
@@ -387,13 +394,14 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
     gui_function.__signature__ = _generate_signature_for_category(category, search_string)
 
     # create the widget
-    widget = magicgui(gui_function, auto_call=True)
+    widget = magicgui(gui_function, auto_call=autocall)
     widget.native.setMinimumWidth(100)
     modify_layout(widget.native, button_size=button_size)
 
     # when the operation name changes, we want to update the argument labels
     # to be appropriate for the corresponding cle operation.
     op_name_widget = getattr(widget, OP_NAME_PARAM)
+    op_name_widget.value = operation_name
 
     @op_name_widget.changed.connect
     def update_positional_labels(*_: Any):
