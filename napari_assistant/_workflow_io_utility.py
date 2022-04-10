@@ -174,51 +174,16 @@ def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
         sets the auto_call behaviour of the magicgui.magicgui function
     """
     gui = None
-    name = wf_step_name[10:]
-    sig = signature(func)
 
-    @wraps(func)
-    def worker_func(*iargs, **ikwargs):
-        data = func(*iargs, **ikwargs)
-        if data is None:
-            return None
+    from ._categories import get_category_of_function, get_name_of_function
+    category = get_category_of_function(func)
 
-        target_layer = None
+    if category is None:
+        raise ModuleNotFoundError("Cannot build user interface for not installed function " + str(func))
+    else:
+        from ._gui._category_widget import make_gui_for_category
+        gui = make_gui_for_category(category, viewer=viewer, operation_name=get_name_of_function(func), autocall=autocall)
 
-        if sig.return_annotation in [ImageData, "napari.types.ImageData", LabelsData, "napari.types.LabelsData"]:
-            op_name = name
-            new_name = f"Result of {op_name}"
-
-            # we now search for a layer that has -this- magicgui attached to it
-            try:
-                # look for an existing layer
-                target_layer = next(x for x in viewer.layers if x.source.widget is gui)
-                target_layer.data = data
-                target_layer.name = new_name
-                # layer.translate = translate
-            except StopIteration:
-                # otherwise create a new one
-                from napari.layers._source import layer_source
-                with layer_source(widget=gui):
-                    if sig.return_annotation in [ImageData, "napari.types.ImageData"]:
-                        target_layer = viewer.add_image(data, name=new_name)
-                    elif sig.return_annotation in [LabelsData, "napari.types.LabelsData"]:
-                        target_layer = viewer.add_labels(data, name=new_name)
-
-        if target_layer is not None:
-            # update the workflow manager in case it's installed
-            try:
-                from napari_workflows import WorkflowManager
-                workflow_manager = WorkflowManager.install(viewer)
-                workflow_manager.update(target_layer, func, *iargs, **ikwargs)
-            except ImportError:
-                pass
-
-            return None
-        else:
-            return data
-
-    gui = magicgui(worker_func, auto_call= autocall)
     return gui
 
 def signature_w_kwargs_from_function(workflow, wf_step_name) -> Signature:
@@ -275,9 +240,13 @@ def set_choices(workflow, wf_step_name: str, viewer, widget):
 
     keyword_list = list(signature(func).parameters.keys())
     image_keywords = [(key,value) for key, value in zip(keyword_list,args) if value in sources]
-    
-    for key, name in image_keywords:
-        widget[key].choices = get_layers_data_of_name(name, viewer, widget[key])
+
+    for i, (key, name) in enumerate(image_keywords):
+        try:
+            widget[key].choices = get_layers_data_of_name(name, viewer, widget[key])
+        except AttributeError:
+            widget["input" + str(i)].choices = get_layers_data_of_name(name, viewer, widget["input" + str(i)])
+
 
 def get_layers_data_of_name(layer_name: str, viewer, gui):
     """
