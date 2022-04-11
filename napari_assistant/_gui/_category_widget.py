@@ -368,7 +368,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                     scale=inputs[0].scale,
                 )
 
-            # notify workflow manage that something was created / updated
+            # notify workflow manager that something was created / updated
             try:
                 from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
