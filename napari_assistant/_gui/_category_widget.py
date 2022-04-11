@@ -16,7 +16,7 @@ from typing_extensions import Annotated
 import napari
 import numpy as np
 
-from .._categories import Category, find_function
+from .._categories import Category, find_function, get_name_of_function
 from qtpy.QtWidgets import QPushButton, QDockWidget
 
 try:
@@ -288,6 +288,25 @@ def _generate_signature_for_category(category: Category, search_string:str= None
     #print("Signature", result)
     return result
 
+def _get_operation_name_for_category_clicked(category: Category, search_string:str= None) -> str:
+    """Create an inspect.Signature object representing a cle Category.
+
+    The output of this function is the operation name for a clicked cataegory given a search string
+    """
+    # Add valid operations choices (will create the combo box)
+    from .._categories import operations_in_menu
+    choices = list(operations_in_menu(category, search_string))
+
+    default_op = category.default_op
+    if not any(default_op == op for op in choices):
+        #print("Default-operation is not in list!")
+        default_op = None
+
+    if default_op is None:
+        return choices[0]
+        
+    else:
+        return default_op
 
 def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
@@ -398,6 +417,10 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
     widget.native.setMinimumWidth(100)
     modify_layout(widget.native, button_size=button_size)
 
+    if operation_name == None:
+        operation_name = _get_operation_name_for_category_clicked(category,search_string)
+        #print(f'opname = {operation_name}')
+    
     # when the operation name changes, we want to update the argument labels
     # to be appropriate for the corresponding cle operation.
     op_name_widget = getattr(widget, OP_NAME_PARAM)
