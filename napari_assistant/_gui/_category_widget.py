@@ -391,7 +391,14 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
             try:
                 from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
-                manager.update(result_layer, find_function(op_name), *used_args)
+
+                # this step basically separates actual arguments from kwargs as this can cause 
+                # conflicts when setting the workflow step
+                signat = signature(find_function(op_name))
+                only_args = [arg for arg, (name,param) in zip(used_args,signat.parameters.items()) if bool(param.default)if bool(param.default)]
+                determined_kwargs = {name:value for (name,param),value in zip(signat.parameters.items(),used_args) if not bool(param.default)}
+                
+                manager.update(result_layer, find_function(op_name), *only_args, **determined_kwargs)
                 #print("notified", result_layer.name, find_function(op_name))
             except ImportError:
                 pass # recording workflows in the WorkflowManager is a nice-to-have at the moment.

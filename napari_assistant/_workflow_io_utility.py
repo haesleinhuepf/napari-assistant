@@ -1,10 +1,15 @@
 from inspect import Signature, signature
 from functools import partial
-from magicgui import magicgui
-from functools import wraps
 from napari.utils._magicgui import _make_choice_data_setter
 from napari.types import ImageData, LabelsData
+from ._gui._category_widget import (
+    separate_argnames_by_type,
+    category_args_bool,
+    category_args_numeric,
+    category_args_text,
+)
 
+# TODO rewrite all comments to display the right thing
 def initialise_root_functions(workflow, viewer):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
@@ -27,22 +32,17 @@ def initialise_root_functions(workflow, viewer):
         # get the fuction from the workflow step and change its signature to
         # the values specified by the workflow
         func = workflow._tasks[wf_step_name][0]
-        signat = signature_w_kwargs_from_function(workflow=workflow,
-                                                  wf_step_name=wf_step_name)
-        func.__signature__ = signat
 
         # create the widget based on the adjusted function and turn off autocall
         # for functions with more than 1 input image
         sources = workflow.sources_of(wf_step_name)
         if len(sources) > 1:
             widget = make_flexible_gui(func, 
-                                       viewer, 
-                                       wf_step_name,
-                                       autocall= False)
+                                    viewer,
+                                    autocall= False)
         else:
             widget = make_flexible_gui(func, 
-                                       viewer, 
-                                       wf_step_name)
+                                    viewer,)
 
         # determine if all input images are in layer names
         sources_present = True
@@ -57,20 +57,29 @@ def initialise_root_functions(workflow, viewer):
                         wf_step_name= wf_step_name,
                         viewer= viewer,
                         widget= widget)
-
-        # if the input images aren't present we will leave the dropdowns
-        # open to chose the right image
+        
+        
         else:
-            # make a tooltip which tells the user to select the input image
-            # specified by the workflow
-            key_source_list = get_source_keywords_and_sources(workflow,
-                                                            wf_step_name)
-            for key, source in key_source_list:
-                widget[key].tooltip = f'Select {source} or equivalent'
-
+            '''
+                # make a tooltip which tells the user to select the input image
+                # specified by the workflow
+                key_source_list = get_source_keywords_and_sources(workflow,
+                                                                wf_step_name)
+                for key, source in key_source_list:
+                    widget[key].tooltip = f'Select {source} or equivalent'
+            '''
             # add the final widget to the napari viewer
             viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
-
+        
+        # setting the right parameters
+        cat_kwargs = category_kwargs(
+            func,
+            kwargs_of_wf_step(workflow,wf_step_name),
+        )
+        for k,v in cat_kwargs.items():
+            widget[k].value = v
+        # if the input images aren't present we will leave the dropdowns
+        # open to chose the right image - needs fixing
         # calling the widget with the correct input images
         widget()
 
@@ -117,24 +126,19 @@ def load_remaining_workflow(workflow, viewer):
 
         # if all input images are there we can continue
         else:
-            # get the fuction from the workflow step and change its signature to
-            # the values specified by the workflow
+            # get the fuction from the workflow step
             func = workflow._tasks[follower][0]
-            signat = signature_w_kwargs_from_function(workflow=workflow,
-                                                        wf_step_name=follower)
-            func.__signature__ = signat
 
             # if more than one source is needed autocall needs to be set to false
             # in order to avoid crashing
             if len(sources) > 1:
                 widget = make_flexible_gui(func, 
-                                            viewer, 
-                                            follower,
+                                            viewer,
                                             autocall= False)
             else:
                 widget = make_flexible_gui(func, 
                                             viewer, 
-                                            follower)
+                )
 
             # add the final widget to the napari viewer and set the input images in
             # the dropdown to the specified input images
@@ -143,6 +147,15 @@ def load_remaining_workflow(workflow, viewer):
                         wf_step_name= follower,
                         viewer= viewer,
                         widget= widget)
+            
+            # setting the right parameters
+            cat_kwargs = category_kwargs(
+                func,
+                kwargs_of_wf_step(workflow,follower),
+            )
+            for k,v in cat_kwargs.items():
+                widget[k].value = v
+
 
             # calling the widget with the correct input images
             widget()
@@ -156,7 +169,7 @@ def load_remaining_workflow(workflow, viewer):
                 if new_follower not in followers[i+1:]:
                     followers.append(new_follower)
 
-def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
+def make_flexible_gui(func, viewer, autocall = True):
     """
     Function returns a widget with a GUI for the function provided in the parameters,
     that can be added to the napari viewer. Largely copied from @haesleinhuepf (I can't remember where though)
@@ -311,3 +324,43 @@ def get_source_keywords_and_sources(workflow, wf_step_name):
     image_keywords = [(key,value) for key, value in zip(keyword_list,args) if value in sources]
     
     return image_keywords
+
+
+
+def category_kwargs(func,kwargs):
+    category_kwargs = {}
+    new_sig = signature(func)
+    # get the names of positional parameters in the new operation
+    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+        new_sig.parameters.items())
+
+    # go through all parameters and collect their values in an args-array
+    num_count = 0
+    str_count = 0
+    bool_count = 0
+    for key in param_names: 
+        if key in numeric_param_names:
+            category_kwargs[category_args_numeric[num_count]] = kwargs[key]
+            num_count = num_count + 1
+        elif key in bool_param_names:
+            category_kwargs[category_args_bool[bool_count]] = kwargs[key]
+            bool_count = bool_count + 1
+        elif key in str_param_names:
+            category_kwargs[category_args_text[str_count]] = kwargs[key]
+            str_count = str_count + 1
+    return category_kwargs
+
+def kwargs_of_wf_step(workflow,wf_step_name):
+    func     = workflow._tasks[wf_step_name][0]
+    arg_vals = workflow._tasks[wf_step_name][1:]
+
+    # getting the keywords corresponding to the values
+    keyword_list = list(signature(func).parameters.keys())
+
+    # creating the kwargs dict
+    kw_dict = {}
+    for kw, val in zip(keyword_list, arg_vals):
+        kw_dict[kw] = val
+        
+    return kw_dict
+
