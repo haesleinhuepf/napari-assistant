@@ -281,7 +281,7 @@ def get_layers_data_of_name(layer_name: str, viewer, gui):
     """
     choices = []
     for layer in [x for x in viewer.layers if str(x) == layer_name]:
-        choice_key = f'{layer.name} (data)'
+        choice_key = f'{layer.name}'
         choices.append((choice_key, layer.data))
         layer.events.data.connect(_make_choice_data_setter(gui, choice_key))
 
@@ -306,6 +306,7 @@ def wf_steps_with_root_as_input(workflow):
                         break
     return wf_step_with_rootinput
 
+# TODO modify for category guis 
 def get_source_keywords_and_sources(workflow, wf_step_name):
     """
     Returns a list of tuples containing (function_keyword, image_name) for all 

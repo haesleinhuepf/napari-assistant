@@ -1,0 +1,33 @@
+!!python/object:napari_workflows._workflow.Workflow
+_tasks:
+  Result of absolute_difference (clesperanto): !!python/tuple
+  - !!python/name:pyclesperanto_prototype.absolute_difference ''
+  - Result of top_hat_box (clesperanto)
+  - Result of gaussian_blur (clesperanto)
+  Result of gaussian_blur (clesperanto): !!python/tuple
+  - &id001 !!python/name:pyclesperanto_prototype.gaussian_blur ''
+  - blobs
+  - null
+  - 6.0
+  - 6.0
+  - 0.0
+  Result of gaussian_blur (clesperanto) [1]: !!python/tuple
+  - *id001
+  - Result of absolute_difference (clesperanto)
+  - null
+  - 23.0
+  - 1.0
+  - 0.0
+  Result of top_hat_box (clesperanto): !!python/tuple
+  - !!python/name:pyclesperanto_prototype.top_hat_box ''
+  - Result of gaussian_blur (clesperanto)
+  - null
+  - 15.0
+  - 15.0
+  - 0.0
+  Result of voronoi_otsu_labeling (clesperanto): !!python/tuple
+  - !!python/name:pyclesperanto_prototype.voronoi_otsu_labeling ''
+  - Result of gaussian_blur (clesperanto) [1]
+  - null
+  - 10.0
+  - 6.0
