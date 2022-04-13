@@ -403,9 +403,9 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                     name:value for (name,param),value in zip(signat.parameters.items(),used_args) 
                     if not (param.default is param.empty)
                 }
-
-                print(f'only arguments: {only_args}')
-                print(f'det kwargs:     {determined_kwargs}')
+                # debugging prints
+                #print(f'only arguments: {only_args}')
+                #print(f'det kwargs:     {determined_kwargs}')
                 manager.update(result_layer, find_function(op_name), *only_args, **determined_kwargs)
                 #print("notified", result_layer.name, find_function(op_name))
             except ImportError:
