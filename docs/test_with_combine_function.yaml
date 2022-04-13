@@ -2,12 +2,19 @@
 _tasks:
   Result of absolute_difference (clesperanto): !!python/tuple
   - !!python/name:pyclesperanto_prototype.absolute_difference ''
-  - Result of gaussian_blur (clesperanto)
   - Result of top_hat_box (clesperanto)
+  - Result of gaussian_blur (clesperanto)
   Result of gaussian_blur (clesperanto): !!python/tuple
   - !!python/name:pyclesperanto_prototype.gaussian_blur ''
   - blobs
   - null
-  - 4.0
-  - 4.0
+  - 6.0
+  - 6.0
+  - 0.0
+  Result of top_hat_box (clesperanto): !!python/tuple
+  - !!python/name:pyclesperanto_prototype.top_hat_box ''
+  - Result of gaussian_blur (clesperanto)
+  - null
+  - 15.0
+  - 15.0
   - 0.0

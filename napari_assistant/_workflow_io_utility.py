@@ -133,11 +133,12 @@ def load_remaining_workflow(workflow, viewer):
             # in order to avoid crashing
             if len(sources) > 1:
                 widget = make_flexible_gui(func, 
-                                            viewer,
-                                            autocall= False)
+                                           viewer,
+                                           autocall= False
+                )
             else:
                 widget = make_flexible_gui(func, 
-                                            viewer, 
+                                           viewer, 
                 )
 
             # add the final widget to the napari viewer and set the input images in

@@ -393,7 +393,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 manager = WorkflowManager.install(viewer)
 
                 # this step basically separates actual arguments from kwargs as this can cause 
-                # conflicts when setting the workflow step 
+                # conflicts when setting the workflow step. 
                 signat = signature(find_function(op_name))
                 only_args = [
                     arg for arg, param in zip(used_args,signat.parameters.values()) 
@@ -403,7 +403,6 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                     name:value for (name,param),value in zip(signat.parameters.items(),used_args) 
                     if not (param.default is param.empty)
                 }
-                
 
                 print(f'only arguments: {only_args}')
                 print(f'det kwargs:     {determined_kwargs}')
@@ -417,6 +416,8 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 if layer in inputs or layer is result_layer:
                     try:
                         viewer.window.remove_dock_widget(widget.native)
+                    # TODO find more elegant or specific solution 
+                    # because this could break some stuff
                     except:
                         pass
 
@@ -435,7 +436,6 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
 
     if operation_name == None:
         operation_name = _get_operation_name_for_category_clicked(category,search_string)
-        #print(f'opname = {operation_name}')
     
     # when the operation name changes, we want to update the argument labels
     # to be appropriate for the corresponding cle operation.
