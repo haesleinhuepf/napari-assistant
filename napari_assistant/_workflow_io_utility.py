@@ -60,6 +60,8 @@ def initialise_root_functions(workflow, viewer):
         
         
         else:
+            # if the input images aren't present we will leave the dropdowns
+            # open to chose the right image - TODO needs fixing
             '''
                 # make a tooltip which tells the user to select the input image
                 # specified by the workflow
@@ -78,8 +80,8 @@ def initialise_root_functions(workflow, viewer):
         )
         for k,v in cat_kwargs.items():
             widget[k].value = v
-        # if the input images aren't present we will leave the dropdowns
-        # open to chose the right image - needs fixing
+        
+
         # calling the widget with the correct input images
         widget()
 
