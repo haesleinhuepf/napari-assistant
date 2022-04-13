@@ -393,10 +393,16 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 manager = WorkflowManager.install(viewer)
 
                 # this step basically separates actual arguments from kwargs as this can cause 
-                # conflicts when setting the workflow step
+                # conflicts when setting the workflow step 
                 signat = signature(find_function(op_name))
-                only_args = [arg for arg, (name,param) in zip(used_args,signat.parameters.items()) if bool(param.default)if bool(param.default)]
-                determined_kwargs = {name:value for (name,param),value in zip(signat.parameters.items(),used_args) if not bool(param.default)}
+                only_args = [
+                    arg for arg, param in zip(used_args,signat.parameters.values()) 
+                    if param.default is param.empty
+                ]
+                determined_kwargs = {
+                    name:value for (name,param),value in zip(signat.parameters.items(),used_args) 
+                    if not (param.default is param.empty)
+                }
                 
 
                 print(f'only arguments: {only_args}')
