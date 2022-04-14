@@ -270,7 +270,7 @@ class Assistant(QWidget):
                 try:
                     Popen([executable, "-y", str(filename)])
                 except Exception as e:
-                    warnings.warn(f"Failed to execute notebook: {e}")
+                    warn(f"Failed to execute notebook: {e}")
         return nb
 
 
@@ -313,10 +313,15 @@ class Assistant(QWidget):
             filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
         self.workflow = _io_yaml_v1.load_workflow(filename)
 
-        initialise_root_functions(self.workflow,
-                                  self._viewer)
-        load_remaining_workflow(workflow=self.workflow,
-                                viewer=self._viewer)
+        w_dw_auto = initialise_root_functions(self.workflow, self._viewer)
+        w_dw_auto += load_remaining_workflow(self.workflow, self._viewer)
+
+        for gui, dw, auto in w_dw_auto:
+            self._layers[gui()] = (dw, gui)
+
+        self._viewer.layers.select_previous()
+        self._viewer.layers.select_next()
+
 
     def search_napari_hub(self):
         print("Search napari hub")

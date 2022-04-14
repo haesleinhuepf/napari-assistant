@@ -2,6 +2,7 @@ from inspect import Signature, signature
 from functools import partial
 from napari.utils._magicgui import _make_choice_data_setter
 from napari.types import ImageData, LabelsData
+from sqlalchemy import within_group
 from ._gui._category_widget import (
     separate_argnames_by_type,
     category_args_bool,
@@ -23,6 +24,8 @@ def initialise_root_functions(workflow, viewer):
     viewer:
         napari.Viewer instance
     """
+    widget_dw_autocall = []
+
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
     layer_names = [lay.name for lay in viewer.layers]
@@ -40,9 +43,11 @@ def initialise_root_functions(workflow, viewer):
             widget = make_flexible_gui(func, 
                                     viewer,
                                     autocall= False)
+            auto = False
         else:
             widget = make_flexible_gui(func, 
                                     viewer,)
+            auto = True
 
         # determine if all input images are in layer names
         sources_present = True
@@ -52,7 +57,7 @@ def initialise_root_functions(workflow, viewer):
 
         # if all input images are present in the layers we can preselct them
         if sources_present:
-            viewer.window.add_dock_widget(widget, name= wf_step_name[10:])
+            dw = viewer.window.add_dock_widget(widget, name= wf_step_name[10:])
             set_choices(workflow= workflow,
                         wf_step_name= wf_step_name,
                         viewer= viewer,
@@ -71,7 +76,7 @@ def initialise_root_functions(workflow, viewer):
                     widget[key].tooltip = f'Select {source} or equivalent'
             '''
             # add the final widget to the napari viewer
-            viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
+            dw = viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
         
         # setting the right parameters
         cat_kwargs = category_kwargs(
@@ -84,6 +89,9 @@ def initialise_root_functions(workflow, viewer):
 
         # calling the widget with the correct input images
         widget()
+        widget_dw_autocall.append((widget,dw,auto))
+    
+    return widget_dw_autocall
 
 def load_remaining_workflow(workflow, viewer):
     """
@@ -104,6 +112,7 @@ def load_remaining_workflow(workflow, viewer):
 
     # start the iteration with the followers of the root functions
     followers = []
+    widget_dw_autocall = []
     for root in root_functions:
         followers += workflow.followers_of(root)
 
@@ -138,14 +147,16 @@ def load_remaining_workflow(workflow, viewer):
                                            viewer,
                                            autocall= False
                 )
+                auto = False
             else:
                 widget = make_flexible_gui(func, 
                                            viewer, 
                 )
+                auto = True
 
             # add the final widget to the napari viewer and set the input images in
             # the dropdown to the specified input images
-            viewer.window.add_dock_widget(widget, name= follower[10:])
+            dw = viewer.window.add_dock_widget(widget, name= follower[10:])
             set_choices(workflow= workflow,
                         wf_step_name= follower,
                         viewer= viewer,
@@ -163,6 +174,7 @@ def load_remaining_workflow(workflow, viewer):
             # calling the widget with the correct input images
             widget()
 
+            widget_dw_autocall.append((widget,dw,auto))
             # finding new followers of the current workflow step
             new_followers = workflow.followers_of(follower)
 
@@ -171,6 +183,8 @@ def load_remaining_workflow(workflow, viewer):
             for new_follower in new_followers:
                 if new_follower not in followers[i+1:]:
                     followers.append(new_follower)
+        
+    return widget_dw_autocall
 
 def make_flexible_gui(func, viewer, autocall = True):
     """
