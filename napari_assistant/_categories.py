@@ -34,7 +34,7 @@ class Category:
 
 CATEGORIES = {
     "Remove noise": Category(
-        name="Removal noise",
+        name="Remove noise",
         description="Remove noise from images, e.g. by local averaging and blurring.",
         inputs=(ImageInput,),
         default_op="gaussian_blur (clesperanto)",
@@ -238,6 +238,16 @@ def all_operations():
     return all_ops
 
 
+def get_name_of_function(func):
+    for k, v in all_operations().items():
+        if v is func:
+            if ">" in k:
+                return k.split(">")[1]
+            else:
+                return k
+    return None
+
+
 def collect_from_pyclesperanto_if_installed():
     """
     Collect all functions from clesperanto that are annotated with "in assistant"
@@ -366,6 +376,8 @@ def operations_in_menu(category, search_string: str = None):
     Return all functions as list in a given category that contain a
     given search string.
     """
+    if not hasattr(category, "tools_menu"):
+        return []
     menu_name = category.tools_menu
     choices = filter_operations(menu_name)
     if search_string is not None and len(search_string) > 0:
@@ -418,6 +430,16 @@ def find_function(op_name):
     return found_function
 
 
+def get_category_of_function(func):
+    func_name = get_name_of_function(func)
+    for k, c in CATEGORIES.items():
+        if not callable(c):
+            ops = operations_in_menu(c)
+            if func_name in ops:
+                return c
+    return None
+
+
 def filter_categories(search_string: str = ""):
     """Return all categories that have a function that contains a
     given search string in their name.
@@ -433,14 +455,17 @@ def filter_categories(search_string: str = ""):
             new_c = copy(c)
             all_categories[k] = new_c
 
+    category_found = False
     result = {}
     for k, c in all_categories.items():
         if callable(c):
-            result[k] = c
+            if category_found ^ ("Search" in k):
+                result[k] = c
         else:
             choices = operations_in_menu(c, search_string)
             c.tool_tip = c.description + "\n\nOperations:\n* " + "\n* ".join(choices).replace("_", " ")
             if len(choices) > 0:
                 result[k] = c
+                category_found = True
 
     return result

@@ -37,8 +37,12 @@ class Assistant(QWidget):
         self._viewer.grid.stride = -1
 
         CATEGORIES["Generate code..."] = self._code_menu
-        CATEGORIES["Workflow IO"] = self._workflow_menu
         CATEGORIES["Undo/Redo"] = self._undo_redo_menu
+        CATEGORIES["Save and load workflows"] = self._workflow_menu
+
+        CATEGORIES["Search napari hub"] = self.search_napari_hub
+        CATEGORIES["Search image.sc"] = self.search_image_sc
+        CATEGORIES["Search BIII"] = self.search_biii
 
         # build GUI
         icon_grid = ButtonGrid(self)
@@ -56,6 +60,8 @@ class Assistant(QWidget):
 
         # create menu
         self.actions = [
+            ("Export Python script to file", self.to_python),
+            ("Export Jupyter Notebook", self.to_notebook),
             ("Copy to clipboard", self.to_clipboard),
         ]
 
@@ -187,6 +193,8 @@ class Assistant(QWidget):
         gui._auto_call = False
         # add gui to the viewer
         dw = self._viewer.window.add_dock_widget(gui, area="right", name=category.name)
+        # workaround for https://github.com/napari/napari/issues/4348
+        dw._close_btn = False
         # make sure the originally active layer is the input
         try:
             gui.input0.value = input_layer
@@ -231,6 +239,57 @@ class Assistant(QWidget):
             dict[id] = new_name
         return dict[id]
 
+    def to_python(self, filename=None):
+        if not filename:
+            filename, _ = QFileDialog.getSaveFileName(self, "Save code as...", ".", "*.py")
+        #return Pipeline.from_assistant(self).to_jython(filename)
+
+        from napari_workflows import WorkflowManager
+        manager = WorkflowManager.install(self._viewer)
+        code = manager.to_python_code()
+
+        if filename:
+            filename = Path(filename).expanduser().resolve()
+            filename.write_text(code)
+
+
+    def to_notebook(self, filename=None, execute=True):
+        if not filename:
+            filename, _ = QFileDialog.getSaveFileName(self, "Save code as notebook...", ".", "*.ipynb")
+        #return Pipeline.from_assistant(self).to_notebook(filename)
+
+        from napari_workflows import WorkflowManager
+        manager = WorkflowManager.install(self._viewer)
+        code = manager.to_python_code(notebook=True)
+
+        import jupytext
+
+        # jython code is created in the jupytext light format
+        # https://jupytext.readthedocs.io/en/latest/formats.html#the-light-format
+
+        jt = jupytext.reads(code, fmt="py:light")
+        nb = jupytext.writes(jt, fmt="ipynb")
+        if filename:
+            filename = Path(filename).expanduser().resolve()
+            filename.write_text(nb)
+            # could use a NamedTemporaryFile to run this even without write
+            if execute:
+                from subprocess import Popen
+                from shutil import which
+
+                executable = "jupyter-lab"
+                if not which(executable):
+                    executable = "jupyter-notebook"
+                    if not which(executable):
+                        raise RuntimeError("Cannot find jupyter-lab or jupyter-notebook executable. Please install it using pip install jupyterlab")
+
+                try:
+                    Popen([executable, "-y", str(filename)])
+                except Exception as e:
+                    warn(f"Failed to execute notebook: {e}")
+        return nb
+
+
     def to_clipboard(self):
         import pyperclip
 
@@ -270,15 +329,76 @@ class Assistant(QWidget):
             filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
         self.workflow = _io_yaml_v1.load_workflow(filename)
 
-        initialise_root_functions(self.workflow,
-                                  self._viewer)
-        load_remaining_workflow(workflow=self.workflow,
-                                viewer=self._viewer)
-    
+        w_dw = initialise_root_functions(
+            self.workflow, 
+            self._viewer, 
+            button_size= self.button_size_spin_box.value(),
+        )
+        w_dw += load_remaining_workflow(
+            self.workflow, 
+            self._viewer,
+            button_size=self.button_size_spin_box.value(),
+        )
+
+        for gui, dw in w_dw:
+            self._layers[gui()] = (dw, gui)
+
+        self._viewer.layers.select_previous()
+        self._viewer.layers.select_next()
+
     def undo_action(self):
-        from .._undo_redo import undo
-        undo(viewer=self._viewer)
+        from .._undo_redo import delete_workflow_widgets_layers
+        from .._workflow_io_utility import initialise_root_functions, load_remaining_workflow
+        from napari_workflows import WorkflowManager
+        # install the workflow manager and get the current workflow and controller
+        manager = WorkflowManager.install(self._viewer)
+        workflow = manager.workflow
+        controller = manager.undo_redo_controller
+
+        controller.freeze = True
+
+        delete_workflow_widgets_layers(self._viewer)
+
+        w_dw = initialise_root_functions(
+            workflow, 
+            self._viewer, 
+            button_size= self.button_size_spin_box.value(),
+        )
+        w_dw += load_remaining_workflow(
+            workflow, 
+            self._viewer,
+            button_size=self.button_size_spin_box.value(),
+        )
+
+        for gui, dw in w_dw:
+            self._layers[gui()] = (dw, gui)
+
+        self._viewer.layers.select_previous()
+        self._viewer.layers.select_next()
+
+        controller.freeze = False
+
+        
 
     def redo_action(self):
         return
 
+    def search_napari_hub(self):
+        print("Search napari hub")
+        from urllib.parse import quote
+        _open_url("https://www.napari-hub.org/?search=" + quote(self.seach_field.text()) + "&sort=relevance")
+
+    def search_image_sc(self):
+        print("Search image sc")
+        from urllib.parse import quote
+        _open_url("https://forum.image.sc/search?q=napari%20" + quote(self.seach_field.text()))
+
+    def search_biii(self):
+        print("Search biii")
+        from urllib.parse import quote
+        _open_url("https://biii.eu/search?search_api_fulltext=napari%20" + quote(self.seach_field.text()))
+
+
+def _open_url(url):
+    import webbrowser
+    webbrowser.open(url, new=0, autoraise=True)

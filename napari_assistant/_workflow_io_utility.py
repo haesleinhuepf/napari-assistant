@@ -1,15 +1,19 @@
 from inspect import Signature, signature
 from functools import partial
-from magicgui import magicgui
-from functools import wraps
 from napari.utils._magicgui import _make_choice_data_setter
 from napari.types import ImageData, LabelsData
-from napari_workflows import Workflow, WorkflowManager
+from sqlalchemy import within_group
+from ._gui._category_widget import (
+    separate_argnames_by_type,
+    category_args_bool,
+    category_args_numeric,
+    category_args_text,
+)
 from napari import Viewer
+from napari_workflows import Workflow, WorkflowManager
 
-def initialise_root_functions(
-    workflow: Workflow, 
-    viewer: Viewer):
+# TODO rewrite all comments to display the right thing
+def initialise_root_functions(workflow, viewer, button_size = 32):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
@@ -22,6 +26,8 @@ def initialise_root_functions(
     viewer:
         napari.Viewer instance
     """
+    widget_dw = []
+
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
     layer_names = [lay.name for lay in viewer.layers]
@@ -31,22 +37,23 @@ def initialise_root_functions(
         # get the fuction from the workflow step and change its signature to
         # the values specified by the workflow
         func = workflow._tasks[wf_step_name][0]
-        signat = signature_w_kwargs_from_function(workflow=workflow,
-                                                  wf_step_name=wf_step_name)
-        func.__signature__ = signat
 
         # create the widget based on the adjusted function and turn off autocall
         # for functions with more than 1 input image
         sources = workflow.sources_of(wf_step_name)
         if len(sources) > 1:
-            widget = make_flexible_gui(func, 
-                                       viewer, 
-                                       wf_step_name,
-                                       autocall= False)
+            widget = make_flexible_gui(
+                func, 
+                viewer,
+                autocall= False,
+                button_size = button_size
+            )
         else:
-            widget = make_flexible_gui(func, 
-                                       viewer, 
-                                       wf_step_name)
+            widget = make_flexible_gui(
+                func, 
+                viewer,
+                button_size=button_size,
+            )
 
         # determine if all input images are in layer names
         sources_present = True
@@ -56,31 +63,43 @@ def initialise_root_functions(
 
         # if all input images are present in the layers we can preselct them
         if sources_present:
-            viewer.window.add_dock_widget(widget, name= wf_step_name[10:])
+            dw = viewer.window.add_dock_widget(widget, name= wf_step_name[10:])
             set_choices(workflow= workflow,
                         wf_step_name= wf_step_name,
                         viewer= viewer,
                         widget= widget)
-
-        # if the input images aren't present we will leave the dropdowns
-        # open to chose the right image
+        
+        
         else:
-            # make a tooltip which tells the user to select the input image
-            # specified by the workflow
-            key_source_list = get_source_keywords_and_sources(workflow,
-                                                            wf_step_name)
-            for key, source in key_source_list:
-                widget[key].tooltip = f'Select {source} or equivalent'
-
+            # if the input images aren't present we will leave the dropdowns
+            # open to chose the right image - TODO needs fixing
+            '''
+                # make a tooltip which tells the user to select the input image
+                # specified by the workflow
+                key_source_list = get_source_keywords_and_sources(workflow,
+                                                                wf_step_name)
+                for key, source in key_source_list:
+                    widget[key].tooltip = f'Select {source} or equivalent'
+            '''
             # add the final widget to the napari viewer
-            viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
+            dw = viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
+        
+        # setting the right parameters
+        cat_kwargs = category_kwargs(
+            func,
+            kwargs_of_wf_step(workflow,wf_step_name),
+        )
+        for k,v in cat_kwargs.items():
+            widget[k].value = v
+        
 
         # calling the widget with the correct input images
         widget()
+        widget_dw.append((widget,dw))
+    
+    return widget_dw
 
-def load_remaining_workflow(
-    workflow: Workflow, 
-    viewer: Viewer):
+def load_remaining_workflow(workflow, viewer, button_size):
     """
     Loads the remaining workflow once initialise_root_functions has been called with
     the same workflow and the same napari viewer
@@ -99,6 +118,7 @@ def load_remaining_workflow(
 
     # start the iteration with the followers of the root functions
     followers = []
+    widget_dw = []
     for root in root_functions:
         followers += workflow.followers_of(root)
 
@@ -123,36 +143,44 @@ def load_remaining_workflow(
 
         # if all input images are there we can continue
         else:
-            # get the fuction from the workflow step and change its signature to
-            # the values specified by the workflow
+            # get the fuction from the workflow step
             func = workflow._tasks[follower][0]
-            signat = signature_w_kwargs_from_function(workflow=workflow,
-                                                        wf_step_name=follower)
-            func.__signature__ = signat
 
             # if more than one source is needed autocall needs to be set to false
             # in order to avoid crashing
             if len(sources) > 1:
                 widget = make_flexible_gui(func, 
-                                            viewer, 
-                                            follower,
-                                            autocall= False)
+                                           viewer,
+                                           autocall= False,
+                                           button_size = button_size
+                )
             else:
                 widget = make_flexible_gui(func, 
-                                            viewer, 
-                                            follower)
+                                           viewer, 
+                                           button_size = button_size
+                )
 
             # add the final widget to the napari viewer and set the input images in
             # the dropdown to the specified input images
-            viewer.window.add_dock_widget(widget, name= follower[10:])
+            dw = viewer.window.add_dock_widget(widget, name= follower[10:])
             set_choices(workflow= workflow,
                         wf_step_name= follower,
                         viewer= viewer,
                         widget= widget)
+            
+            # setting the right parameters
+            cat_kwargs = category_kwargs(
+                func,
+                kwargs_of_wf_step(workflow,follower),
+            )
+            for k,v in cat_kwargs.items():
+                widget[k].value = v
+
 
             # calling the widget with the correct input images
             widget()
 
+            widget_dw.append((widget,dw))
             # finding new followers of the current workflow step
             new_followers = workflow.followers_of(follower)
 
@@ -161,6 +189,8 @@ def load_remaining_workflow(
             for new_follower in new_followers:
                 if new_follower not in followers[i+1:]:
                     followers.append(new_follower)
+        
+    return widget_dw
 
 # TODO remove
 def load_workflow_undo_redo(
@@ -180,7 +210,7 @@ def load_workflow_undo_redo(
     #    manager.undo_redo_controller.undo()
     print(f'undos remaining workflow: {init_undos}') # TODO remove
 
-def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
+def make_flexible_gui(func, viewer, autocall = True, button_size = 32):
     """
     Function returns a widget with a GUI for the function provided in the parameters,
     that can be added to the napari viewer. Largely copied from @haesleinhuepf (I can't remember where though)
@@ -198,47 +228,22 @@ def make_flexible_gui(func, viewer, wf_step_name, autocall = True):
         sets the auto_call behaviour of the magicgui.magicgui function
     """
     gui = None
-    name = wf_step_name[10:]
-    sig = signature(func)
 
-    @wraps(func)
-    def worker_func(*iargs, **ikwargs):
-        data = func(*iargs, **ikwargs)
-        if data is None:
-            return None
+    from ._categories import get_category_of_function, get_name_of_function
+    category = get_category_of_function(func)
 
-        target_layer = None
+    if category is None:
+        raise ModuleNotFoundError("Cannot build user interface for not installed function " + str(func))
+    else:
+        from ._gui._category_widget import make_gui_for_category
+        gui = make_gui_for_category(
+            category, 
+            viewer=viewer, 
+            operation_name=get_name_of_function(func), 
+            autocall=autocall, 
+            button_size= button_size
+        )
 
-        if sig.return_annotation in [ImageData, "napari.types.ImageData", LabelsData, "napari.types.LabelsData"]:
-            op_name = name
-            new_name = f"Result of {op_name}"
-
-            # we now search for a layer that has -this- magicgui attached to it
-            try:
-                # look for an existing layer
-                target_layer = next(x for x in viewer.layers if x.source.widget is gui)
-                target_layer.data = data
-                target_layer.name = new_name
-                # layer.translate = translate
-            except StopIteration:
-                # otherwise create a new one
-                from napari.layers._source import layer_source
-                with layer_source(widget=gui):
-                    if sig.return_annotation in [ImageData, "napari.types.ImageData"]:
-                        target_layer = viewer.add_image(data, name=new_name)
-                    elif sig.return_annotation in [LabelsData, "napari.types.LabelsData"]:
-                        target_layer = viewer.add_labels(data, name=new_name)
-
-        if target_layer is not None:
-            # update the workflow manager in case it's installed
-            workflow_manager = WorkflowManager.install(viewer)
-            workflow_manager.update(target_layer, func, *iargs, **ikwargs) 
-
-            return None
-        else:
-            return data
-
-    gui = magicgui(worker_func, auto_call= autocall)
     return gui
 
 def signature_w_kwargs_from_function(workflow, wf_step_name) -> Signature:
@@ -295,9 +300,13 @@ def set_choices(workflow, wf_step_name: str, viewer, widget):
 
     keyword_list = list(signature(func).parameters.keys())
     image_keywords = [(key,value) for key, value in zip(keyword_list,args) if value in sources]
-    
-    for key, name in image_keywords:
-        widget[key].choices = get_layers_data_of_name(name, viewer, widget[key])
+
+    for i, (key, name) in enumerate(image_keywords):
+        try:
+            widget[key].choices = get_layers_data_of_name(name, viewer, widget[key])
+        except AttributeError:
+            widget["input" + str(i)].choices = get_layers_data_of_name(name, viewer, widget["input" + str(i)])
+
 
 def get_layers_data_of_name(layer_name: str, viewer, gui):
     """
@@ -316,7 +325,7 @@ def get_layers_data_of_name(layer_name: str, viewer, gui):
     """
     choices = []
     for layer in [x for x in viewer.layers if str(x) == layer_name]:
-        choice_key = f'{layer.name} (data)'
+        choice_key = f'{layer.name}'
         choices.append((choice_key, layer.data))
         layer.events.data.connect(_make_choice_data_setter(gui, choice_key))
 
@@ -341,6 +350,7 @@ def wf_steps_with_root_as_input(workflow):
                         break
     return wf_step_with_rootinput
 
+# TODO modify for category guis 
 def get_source_keywords_and_sources(workflow, wf_step_name):
     """
     Returns a list of tuples containing (function_keyword, image_name) for all 
@@ -362,3 +372,43 @@ def get_source_keywords_and_sources(workflow, wf_step_name):
     image_keywords = [(key,value) for key, value in zip(keyword_list,args) if value in sources]
     
     return image_keywords
+
+
+
+def category_kwargs(func,kwargs):
+    category_kwargs = {}
+    new_sig = signature(func)
+    # get the names of positional parameters in the new operation
+    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+        new_sig.parameters.items())
+
+    # go through all parameters and collect their values in an args-array
+    num_count = 0
+    str_count = 0
+    bool_count = 0
+    for key in param_names: 
+        if key in numeric_param_names:
+            category_kwargs[category_args_numeric[num_count]] = kwargs[key]
+            num_count = num_count + 1
+        elif key in bool_param_names:
+            category_kwargs[category_args_bool[bool_count]] = kwargs[key]
+            bool_count = bool_count + 1
+        elif key in str_param_names:
+            category_kwargs[category_args_text[str_count]] = kwargs[key]
+            str_count = str_count + 1
+    return category_kwargs
+
+def kwargs_of_wf_step(workflow,wf_step_name):
+    func     = workflow._tasks[wf_step_name][0]
+    arg_vals = workflow._tasks[wf_step_name][1:]
+
+    # getting the keywords corresponding to the values
+    keyword_list = list(signature(func).parameters.keys())
+
+    # creating the kwargs dict
+    kw_dict = {}
+    for kw, val in zip(keyword_list, arg_vals):
+        kw_dict[kw] = val
+        
+    return kw_dict
+

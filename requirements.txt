@@ -5,7 +5,9 @@ magicgui
 numpy!=1.19.4
 pyperclip
 loguru
+jupytext
+jupyter
 pandas
 napari-time-slicer>=0.4.0
 napari-skimage-regionprops>=0.2.0
-napari-workflows>=0.1.1
+napari-workflows>=0.1.7

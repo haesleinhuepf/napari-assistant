@@ -16,7 +16,7 @@ from typing_extensions import Annotated
 import napari
 import numpy as np
 
-from .._categories import Category, find_function
+from .._categories import Category, find_function, get_name_of_function
 from qtpy.QtWidgets import QPushButton, QDockWidget
 
 try:
@@ -288,8 +288,27 @@ def _generate_signature_for_category(category: Category, search_string:str= None
     #print("Signature", result)
     return result
 
+def _get_operation_name_for_category_clicked(category: Category, search_string:str= None) -> str:
+    """Create an inspect.Signature object representing a cle Category.
 
-def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24) -> magicgui.widgets.FunctionGui[Layer]:
+    The output of this function is the operation name for a clicked cataegory given a search string
+    """
+    # Add valid operations choices (will create the combo box)
+    from .._categories import operations_in_menu
+    choices = list(operations_in_menu(category, search_string))
+
+    default_op = category.default_op
+    if not any(default_op == op for op in choices):
+        #print("Default-operation is not in list!")
+        default_op = None
+
+    if default_op is None:
+        return choices[0]
+        
+    else:
+        return default_op
+
+def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
 
     Parameters
@@ -311,7 +330,14 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
         We modify it's __signature__ below.
         """
         viewer = kwargs.pop(VIEWER_PARAM, None)
-        inputs = [kwargs.pop(k) for k in list(kwargs) if k.startswith("input")]
+        inputs = []
+        for i in [kwargs.pop(k) for k in list(kwargs) if k.startswith("input")]:
+            if isinstance(i, napari.layers.Layer):
+                inputs.append(i)
+            else:
+                from napari_workflows._workflow import _get_layer_from_data
+                inputs.append(_get_layer_from_data(viewer, i))
+
         t_position = None
         if viewer is not None and len(viewer.dims.current_step) == 4:
             # in case we process a 4D-data set, we need read out the current timepoint
@@ -361,11 +387,26 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                     scale=inputs[0].scale,
                 )
 
-            # notify workflow manage that something was created / updated
+            # notify workflow manager that something was created / updated
             try:
                 from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
-                manager.update(result_layer, find_function(op_name), *used_args)
+
+                # this step basically separates actual arguments from kwargs as this can cause 
+                # conflicts when setting the workflow step. 
+                signat = signature(find_function(op_name))
+                only_args = [
+                    arg for arg, param in zip(used_args,signat.parameters.values()) 
+                    if param.default is param.empty
+                ]
+                determined_kwargs = {
+                    name:value for (name,param),value in zip(signat.parameters.items(),used_args) 
+                    if not (param.default is param.empty)
+                }
+                # debugging prints
+                #print(f'only arguments: {only_args}')
+                #print(f'det kwargs:     {determined_kwargs}')
+                manager.update(result_layer, find_function(op_name), *only_args, **determined_kwargs)
                 #print("notified", result_layer.name, find_function(op_name))
             except ImportError:
                 pass # recording workflows in the WorkflowManager is a nice-to-have at the moment.
@@ -375,6 +416,8 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 if layer in inputs or layer is result_layer:
                     try:
                         viewer.window.remove_dock_widget(widget.native)
+                    # TODO find more elegant or specific solution 
+                    # because this could break some stuff
                     except:
                         pass
 
@@ -387,13 +430,17 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
     gui_function.__signature__ = _generate_signature_for_category(category, search_string)
 
     # create the widget
-    widget = magicgui(gui_function, auto_call=True)
+    widget = magicgui(gui_function, auto_call=autocall)
     widget.native.setMinimumWidth(100)
     modify_layout(widget.native, button_size=button_size)
 
+    if operation_name == None:
+        operation_name = _get_operation_name_for_category_clicked(category,search_string)
+    
     # when the operation name changes, we want to update the argument labels
     # to be appropriate for the corresponding cle operation.
     op_name_widget = getattr(widget, OP_NAME_PARAM)
+    op_name_widget.value = operation_name
 
     @op_name_widget.changed.connect
     def update_positional_labels(*_: Any):
