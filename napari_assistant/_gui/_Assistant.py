@@ -313,10 +313,18 @@ class Assistant(QWidget):
             filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
         self.workflow = _io_yaml_v1.load_workflow(filename)
 
-        w_dw_auto = initialise_root_functions(self.workflow, self._viewer)
-        w_dw_auto += load_remaining_workflow(self.workflow, self._viewer)
+        w_dw = initialise_root_functions(
+            self.workflow, 
+            self._viewer, 
+            button_size= self.button_size_spin_box.value(),
+        )
+        w_dw += load_remaining_workflow(
+            self.workflow, 
+            self._viewer,
+            button_size=self.button_size_spin_box.value(),
+        )
 
-        for gui, dw, auto in w_dw_auto:
+        for gui, dw in w_dw:
             self._layers[gui()] = (dw, gui)
 
         self._viewer.layers.select_previous()

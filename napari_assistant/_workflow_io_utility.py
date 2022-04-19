@@ -11,7 +11,7 @@ from ._gui._category_widget import (
 )
 
 # TODO rewrite all comments to display the right thing
-def initialise_root_functions(workflow, viewer):
+def initialise_root_functions(workflow, viewer, button_size = 32):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
@@ -24,7 +24,7 @@ def initialise_root_functions(workflow, viewer):
     viewer:
         napari.Viewer instance
     """
-    widget_dw_autocall = []
+    widget_dw = []
 
     # find all workflow steps with functions which have root images as an input
     root_functions = wf_steps_with_root_as_input(workflow)
@@ -40,14 +40,18 @@ def initialise_root_functions(workflow, viewer):
         # for functions with more than 1 input image
         sources = workflow.sources_of(wf_step_name)
         if len(sources) > 1:
-            widget = make_flexible_gui(func, 
-                                    viewer,
-                                    autocall= False)
-            auto = False
+            widget = make_flexible_gui(
+                func, 
+                viewer,
+                autocall= False,
+                button_size = button_size
+            )
         else:
-            widget = make_flexible_gui(func, 
-                                    viewer,)
-            auto = True
+            widget = make_flexible_gui(
+                func, 
+                viewer,
+                button_size=button_size,
+            )
 
         # determine if all input images are in layer names
         sources_present = True
@@ -89,11 +93,11 @@ def initialise_root_functions(workflow, viewer):
 
         # calling the widget with the correct input images
         widget()
-        widget_dw_autocall.append((widget,dw,auto))
+        widget_dw.append((widget,dw))
     
-    return widget_dw_autocall
+    return widget_dw
 
-def load_remaining_workflow(workflow, viewer):
+def load_remaining_workflow(workflow, viewer, button_size):
     """
     Loads the remaining workflow once initialise_root_functions has been called with
     the same workflow and the same napari viewer
@@ -112,7 +116,7 @@ def load_remaining_workflow(workflow, viewer):
 
     # start the iteration with the followers of the root functions
     followers = []
-    widget_dw_autocall = []
+    widget_dw = []
     for root in root_functions:
         followers += workflow.followers_of(root)
 
@@ -145,14 +149,14 @@ def load_remaining_workflow(workflow, viewer):
             if len(sources) > 1:
                 widget = make_flexible_gui(func, 
                                            viewer,
-                                           autocall= False
+                                           autocall= False,
+                                           button_size = button_size
                 )
-                auto = False
             else:
                 widget = make_flexible_gui(func, 
                                            viewer, 
+                                           button_size = button_size
                 )
-                auto = True
 
             # add the final widget to the napari viewer and set the input images in
             # the dropdown to the specified input images
@@ -174,7 +178,7 @@ def load_remaining_workflow(workflow, viewer):
             # calling the widget with the correct input images
             widget()
 
-            widget_dw_autocall.append((widget,dw,auto))
+            widget_dw.append((widget,dw))
             # finding new followers of the current workflow step
             new_followers = workflow.followers_of(follower)
 
@@ -184,9 +188,9 @@ def load_remaining_workflow(workflow, viewer):
                 if new_follower not in followers[i+1:]:
                     followers.append(new_follower)
         
-    return widget_dw_autocall
+    return widget_dw
 
-def make_flexible_gui(func, viewer, autocall = True):
+def make_flexible_gui(func, viewer, autocall = True, button_size = 32):
     """
     Function returns a widget with a GUI for the function provided in the parameters,
     that can be added to the napari viewer. Largely copied from @haesleinhuepf (I can't remember where though)
@@ -212,7 +216,13 @@ def make_flexible_gui(func, viewer, autocall = True):
         raise ModuleNotFoundError("Cannot build user interface for not installed function " + str(func))
     else:
         from ._gui._category_widget import make_gui_for_category
-        gui = make_gui_for_category(category, viewer=viewer, operation_name=get_name_of_function(func), autocall=autocall)
+        gui = make_gui_for_category(
+            category, 
+            viewer=viewer, 
+            operation_name=get_name_of_function(func), 
+            autocall=autocall, 
+            button_size= button_size
+        )
 
     return gui
 
