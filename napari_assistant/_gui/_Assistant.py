@@ -350,33 +350,45 @@ class Assistant(QWidget):
         from .._undo_redo import delete_workflow_widgets_layers
         from .._workflow_io_utility import initialise_root_functions, load_remaining_workflow
         from napari_workflows import WorkflowManager
+
         # install the workflow manager and get the current workflow and controller
         manager = WorkflowManager.install(self._viewer)
         workflow = manager.workflow
         controller = manager.undo_redo_controller
 
-        controller.freeze = True
+        print('workflow before undo:')
+        print(workflow)
 
-        delete_workflow_widgets_layers(self._viewer)
+        # only reload if there is an undo to be performed
+        if controller.undo_stack:
 
-        w_dw = initialise_root_functions(
-            workflow, 
-            self._viewer, 
-            button_size= self.button_size_spin_box.value(),
-        )
-        w_dw += load_remaining_workflow(
-            workflow, 
-            self._viewer,
-            button_size=self.button_size_spin_box.value(),
-        )
+            # undo workflow step: workflow is now the undone workflow
+            controller.undo()
+            print('workflow after undo:')
+            print(workflow)
 
-        for gui, dw in w_dw:
-            self._layers[gui()] = (dw, gui)
+            controller.freeze = True
 
-        self._viewer.layers.select_previous()
-        self._viewer.layers.select_next()
+            delete_workflow_widgets_layers(self._viewer)
 
-        controller.freeze = False
+            w_dw = initialise_root_functions(
+                workflow, 
+                self._viewer, 
+                button_size= self.button_size_spin_box.value(),
+            )
+            w_dw += load_remaining_workflow(
+                workflow, 
+                self._viewer,
+                button_size=self.button_size_spin_box.value(),
+            )
+
+            for gui, dw in w_dw:
+                self._layers[gui()] = (dw, gui)
+
+            self._viewer.layers.select_previous()
+            self._viewer.layers.select_next()
+
+            controller.freeze = False
 
         
 
