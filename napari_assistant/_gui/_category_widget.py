@@ -60,6 +60,55 @@ def num_positional_args(func, types=[np.ndarray, napari.types.ImageData, napari.
     params = signature(func).parameters
     return len([p for p in params.values() if p.annotation in types])
 
+def kwarg_key_adapter(func):
+    '''
+    Returns a dictionary mapping keywords between the category kwarg keys used
+    by the napari assistant to the kwarg keys of the input functions as well
+    as the reverse mapping.
+
+    Parameters
+    ----------
+
+    func: function
+        the function for which the mapping should be generated
+    '''
+    adapter = {}
+    sig = signature(func)
+    items = sig.parameters.items()
+    # get the names of positional parameters in the new operation
+    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+        items)
+
+    # go through all parameters and collect their values in an args-array
+    num_count = 0
+    str_count = 0
+    bool_count = 0
+    for key in param_names: 
+        if key in numeric_param_names:
+            adapter[category_args_numeric[num_count]] = key
+            adapter[key] = category_args_numeric[num_count]
+            num_count += 1
+        elif key in bool_param_names:
+            adapter[category_args_bool[bool_count]] = key
+            adapter[key] = category_args_bool[bool_count]
+            bool_count += 1
+        elif key in str_param_names:
+            adapter[category_args_text[str_count]] = key
+            adapter[key] = category_args_text[str_count]
+            str_count += 1
+
+    other_count = 0    
+    other_param_names = [
+        name
+        for name, param in items
+        if param.annotation not in {int, str, float, bool}
+    ]
+    for key in other_param_names:
+        adapter["input" + str(other_count)] = key
+        adapter[key] = "input" + str(other_count)
+        other_count += 1
+
+    return adapter
 
 @logger.catch
 def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewer: napari.Viewer = None, **kwargs) -> np.ndarray:
@@ -99,28 +148,13 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     cle_function = find_function(op_name)
     nargs = num_positional_args(cle_function)
 
-    args = []
     new_sig = signature(cle_function)
+    adapter = kwarg_key_adapter(cle_function)
     # get the names of positional parameters in the new operation
-    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+    param_names, foo, bar, foobar = separate_argnames_by_type(
         new_sig.parameters.items())
-
-    # go through all parameters and collect their values in an args-array
-    num_count = 0
-    str_count = 0
-    bool_count = 0
-    for key in param_names:
-        if key in numeric_param_names:
-            value = kwargs[category_args_numeric[num_count]]
-            num_count = num_count + 1
-        elif key in bool_param_names:
-            value = kwargs[category_args_bool[bool_count]]
-            bool_count = bool_count + 1
-        elif key in str_param_names:
-            value = kwargs[category_args_text[str_count]]
-            str_count = str_count + 1
-        args.append(value)
-    args = tuple(args)
+    
+    args = tuple([kwargs[adapter[key]] for key in param_names])
 
     if cle_function.__module__ == "pyclesperanto_prototype":
         # todo: we should handle all functions equally
