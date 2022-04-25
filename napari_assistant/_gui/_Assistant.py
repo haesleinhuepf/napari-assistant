@@ -381,7 +381,7 @@ class Assistant(QWidget):
                 self._viewer,
                 button_size=self.button_size_spin_box.value(),
             )
-
+            print('tried to load widgets')
             for gui, dw in w_dw:
                 self._layers[gui()] = (dw, gui)
 
@@ -389,7 +389,7 @@ class Assistant(QWidget):
             self._viewer.layers.select_next()
 
             controller.freeze = False
-
+            print('unfrozen')
         
 
     def redo_action(self):
