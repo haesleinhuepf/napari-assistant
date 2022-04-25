@@ -7,12 +7,13 @@ from ._gui._category_widget import (
     make_gui_for_category,
 )
 
-# TODO look if comments are accurate
+
 def initialise_root_functions(workflow, viewer, button_size = 32):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
-    of the workflow if they are not already present in the layers
+    of the workflow if they are not already present in the layers. Returns a list of
+    tupules containing [(widgets, dockwidgets)] for further processing.
 
     Parameters
     ----------
@@ -23,6 +24,7 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
     button_size: int
         button size parameter that is passed to make_category_gui    
     """
+    # list to save widgets and dockwidgets
     widget_dw = []
 
     # find all workflow steps with functions which have root images as an input
@@ -31,12 +33,8 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
 
     # iterate over root function workflow steps
     for wf_step_name in root_functions:
-        # get the fuction from the workflow step and change its signature to
-        # the values specified by the workflow
+        # get the function from the workflow step as well as the source image names
         func = workflow._tasks[wf_step_name][0]
-
-        # create the widget based on the adjusted function and turn off autocall
-        # for functions with more than 1 input image
         sources = workflow.sources_of(wf_step_name)
         
         # if more than one source is needed autocall needs to be set to false
@@ -45,15 +43,17 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
             widget = make_flexible_gui(
                 func, 
                 viewer,
-                autocall= False,
+                autocall = False,
                 button_size = button_size,
             )
+
         else:
             widget = make_flexible_gui(
                 func, 
                 viewer, 
                 button_size = button_size,
             )
+            # temporarily disable autocall to avoid unnecessary executions of the function
             widget._auto_call = False
 
         # determine if all input images are in layer names
@@ -71,7 +71,7 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
                         widget= widget)
         else:
             # if the input images aren't present we will leave the dropdowns
-            # open to chose the right image - make a tooltip which tells the 
+            # open to chose the right image and make a tooltip which tells the 
             # user to select the input image specified by the workflow
             key_source_list = get_source_keywords_and_sources(workflow,
                                                             wf_step_name)
@@ -81,16 +81,19 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
             # add the final widget to the napari viewer
             dw = viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
         
-        # setting the right parameters
+        # setting the right parameters by getting the assistant specific kwargs
         cat_kwargs = category_kwargs(
             func,
             kwargs_of_wf_step(workflow,wf_step_name),
         )
+        #setting the values        
         for k,v in cat_kwargs.items():
             widget[k].value = v
         
+        # turning autocall back on for widgets with one source
         if len(sources) <2:
             widget._auto_call = True
+
         # calling the widget with the correct input images
         widget()
         widget_dw.append((widget,dw))
@@ -137,13 +140,11 @@ def load_remaining_workflow(workflow, viewer, button_size):
             if source not in layer_names:
                 sources_present = False
 
-        # if some input images are missing we will move to other functions first
+        # if some input images are missing we will move to next iter step
         if not sources_present:
             if follower not in followers[i+1:]:
                 followers.append(follower)
-            continue    
-
-        # if all input images are there we can continue
+            continue
         
         # get the fuction from the workflow step
         func = workflow._tasks[follower][0]
@@ -161,6 +162,7 @@ def load_remaining_workflow(workflow, viewer, button_size):
                                         viewer, 
                                         button_size = button_size
             )
+            # temporarily disable autocall to avoid unnecessary executions of the function
             widget._auto_call = False
         # add the final widget to the napari viewer and set the input images in
         # the dropdown to the specified input images
@@ -170,7 +172,7 @@ def load_remaining_workflow(workflow, viewer, button_size):
                     viewer= viewer,
                     widget= widget)
         
-        # setting the right parameters
+        # setting the right parameters based on assistant specific kwargs
         cat_kwargs = category_kwargs(
             func,
             kwargs_of_wf_step(workflow,follower),
@@ -178,12 +180,15 @@ def load_remaining_workflow(workflow, viewer, button_size):
         for k,v in cat_kwargs.items():
             widget[k].value = v
 
+        # turning autocall back on for functions with one input image
         if len(sources) <2:
             widget._auto_call = True
-        # calling the widget with the correct input images
+
+        # calling the widget with the correctly set input images
         widget()
 
         widget_dw.append((widget,dw))
+
         # finding new followers of the current workflow step
         new_followers = workflow.followers_of(follower)
 
@@ -226,7 +231,6 @@ def make_flexible_gui(func, viewer, autocall = True, button_size = 32):
             autocall=autocall, 
             button_size= button_size
         )
-
     return gui
 
 def set_choices(workflow, wf_step_name: str, viewer, widget):
@@ -258,7 +262,7 @@ def set_choices(workflow, wf_step_name: str, viewer, widget):
 def get_layers_data_of_name(layer_name: str, viewer, gui):
     """
     Returns a choices dictionary which can be utilised to set an input image of a 
-    widget with the function set_choices. code modified from napari/utils/_magicgui
+    widget with the function set_choices. Code modified from napari/utils/_magicgui
     get_layers_data function.
 
     Parameters
@@ -311,13 +315,12 @@ def get_source_keywords_and_sources(workflow, wf_step_name):
         should be returned
     """
     func = workflow._tasks[wf_step_name][0]
-    args = workflow._tasks[wf_step_name][1:]
+    kwargs = kwargs_of_wf_step(workflow,wf_step_name)
     adapter = kwarg_key_adapter(func)
-    
     sources = workflow.sources_of(wf_step_name)
-    keyword_list = list(signature(func).parameters.keys())
+
     image_keywords = [
-        (adapter[key],value) for key, value in zip(keyword_list,args) if value in sources
+        (adapter[key],value) for key, value in kwargs.items() if value in sources
     ]
     
     return image_keywords
