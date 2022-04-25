@@ -206,6 +206,7 @@ class Assistant(QWidget):
         # turn on auto_call, and make sure that if the input changes we update
         gui._auto_call = True
         self._connect_to_all_layers()
+        return gui
 
     def _refesh_data(self, event):
         self._refresh(event.source)
