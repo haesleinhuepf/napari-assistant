@@ -373,9 +373,7 @@ class Assistant(QWidget):
             self._viewer.layers.select_previous()
             self._viewer.layers.select_next()
 
-            controller.freeze_stacks = False
-
-            
+            controller.freeze_stacks = False            
 
     def redo_action(self):
         from .._undo_redo import clear_and_load_workflow
@@ -405,7 +403,6 @@ class Assistant(QWidget):
             self._viewer.layers.select_next()
 
             controller.freeze_stacks = False
-            
 
     def search_napari_hub(self):
         print("Search napari hub")

@@ -2,7 +2,7 @@ from napari_assistant._workflow_io_utility import load_remaining_workflow, initi
 from napari_workflows import WorkflowManager, Workflow
 from napari import Viewer
 
-def delete_workflow_widgets_layers(viewer: Viewer):
+def delete_workflow_widgets_layers(viewer: Viewer) -> None:
     """
     Deletes all layers which were created by widgets and closes the widgets prior
 
@@ -27,8 +27,13 @@ def delete_workflow_widgets_layers(viewer: Viewer):
     for layer_name in layer_names:
         if layers[layer_name].source.widget:
             layers.remove(layer_name)
-
-def clear_and_load_workflow(viewer: Viewer,manager_workflow: Workflow, workflow_to_load: Workflow, button_size = 32):
+# TODO Docstring
+def clear_and_load_workflow(
+    viewer: Viewer,
+    manager_workflow: Workflow, 
+    workflow_to_load: Workflow, 
+    button_size = 32
+) -> list:
     delete_workflow_widgets_layers(viewer)
     manager_workflow.clear()
 
@@ -43,8 +48,12 @@ def clear_and_load_workflow(viewer: Viewer,manager_workflow: Workflow, workflow_
         button_size=button_size,
     )
     return w_dw
-            
-def change_widget_parameters(manager_workflow: Workflow, updated_workflow:Workflow):
+
+# EXPERIMENTAL        
+def _change_widget_parameters(
+    manager_workflow: Workflow, 
+    updated_workflow:Workflow
+) -> None:
     from ._workflow_io_utility import category_kwargs, kwargs_of_wf_step
     for key in manager_workflow._tasks.keys():
         if manager_workflow._tasks[key] != updated_workflow._tasks[key]:
