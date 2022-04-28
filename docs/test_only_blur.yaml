@@ -1,9 +1,0 @@
-!!python/object:napari_workflows._workflow.Workflow
-_tasks:
-  Result of gaussian_blur (clesperanto): !!python/tuple
-  - !!python/name:pyclesperanto_prototype.gaussian_blur ''
-  - blobs
-  - null
-  - 4.0
-  - 4.0
-  - 0.0
