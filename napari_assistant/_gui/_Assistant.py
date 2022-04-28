@@ -348,59 +348,79 @@ class Assistant(QWidget):
         self._viewer.layers.select_next()
 
     def undo_action(self):
-        from .._undo_redo import clear_and_load_workflow
-        from napari_workflows import WorkflowManager
+        from .._undo_redo import clear_and_load_workflow, _change_widget_parameters#
+        from napari_workflows import WorkflowManager, Workflow
         # install the workflow manager and get the current workflow and controller
-        manager = WorkflowManager.install(self._viewer)
+        manager: WorkflowManager = WorkflowManager.install(self._viewer)
         controller = manager.undo_redo_controller
+        workflow: Workflow = manager.workflow
         # only reload if there is an undo to be performed
         if controller.undo_stack:
 
             # undo workflow step: workflow is now the undone workflow
-            old_wf = controller.undo()
+            undo_wf: Workflow = controller.undo()
             controller.freeze_stacks = True
+            if len(undo_wf._tasks.keys()) == len(workflow._tasks.keys()):
+                widgets_dict = {
+                    key:self._layers[self._viewer.layers[key]][1] 
+                    for key in workflow._tasks.keys()
+                }
+                _change_widget_parameters(
+                    manager_workflow=workflow,
+                    updated_workflow=undo_wf,
+                    widgets=widgets_dict)
+            else:
+                w_dw = clear_and_load_workflow(
+                    viewer=self._viewer,
+                    manager_workflow=workflow,
+                    workflow_to_load=undo_wf,
+                    button_size=self.button_size_spin_box.value()
+                )
 
-            w_dw = clear_and_load_workflow(
-                viewer=self._viewer,
-                manager_workflow=manager.workflow,
-                workflow_to_load=old_wf,
-                button_size=self.button_size_spin_box.value()
-            )
+                for gui, dw in w_dw:
+                    self._layers[gui()] = (dw, gui)
 
-            for gui, dw in w_dw:
-                self._layers[gui()] = (dw, gui)
-
-            self._viewer.layers.select_previous()
-            self._viewer.layers.select_next()
+                self._viewer.layers.select_previous()
+                self._viewer.layers.select_next()
 
             controller.freeze_stacks = False            
 
     def redo_action(self):
-        from .._undo_redo import clear_and_load_workflow
-        from napari_workflows import WorkflowManager
+        from .._undo_redo import clear_and_load_workflow, _change_widget_parameters
+        from napari_workflows import WorkflowManager, Workflow
 
         # install the workflow manager and get the current workflow and controller
-        manager = WorkflowManager.install(self._viewer)
+        manager: WorkflowManager = WorkflowManager.install(self._viewer)
         controller = manager.undo_redo_controller
+        workflow = manager.workflow
         # only reload if there is an undo to be performed
         if controller.redo_stack:
 
             # undo workflow step: workflow is now the undone workflow
-            redo_wf = controller.redo()
+            redo_wf: Workflow = controller.redo()
             controller.freeze_stacks = True
+            if len(redo_wf._tasks.keys()) == len(workflow._tasks.keys()):
+                widgets_dict = {
+                    key:self._layers[self._viewer.layers[key]][1] 
+                    for key in workflow._tasks.keys()
+                }
+                _change_widget_parameters(
+                    manager_workflow=workflow,
+                    updated_workflow=redo_wf,
+                    widgets=widgets_dict)
+            else:
+                w_dw = clear_and_load_workflow(
+                    viewer=self._viewer,
+                    manager_workflow = workflow,
+                    workflow_to_load=redo_wf,
+                    button_size=self.button_size_spin_box.value()
+                )
 
-            w_dw = clear_and_load_workflow(
-                viewer=self._viewer,
-                manager_workflow = manager.workflow,
-                workflow_to_load=redo_wf,
-                button_size=self.button_size_spin_box.value()
-            )
+                for gui, dw in w_dw:
+                    self._layers[gui()] = (dw, gui)
 
-            for gui, dw in w_dw:
-                self._layers[gui()] = (dw, gui)
-
-            self._viewer.layers.select_previous()
-            self._viewer.layers.select_next()
+                self._viewer.layers.select_previous()
+                self._viewer.layers.select_next()
 
             controller.freeze_stacks = False
 

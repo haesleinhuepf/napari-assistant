@@ -366,7 +366,10 @@ def category_kwargs(func,kwargs):
 
     return category_kwargs
 
-def kwargs_of_wf_step(workflow,wf_step_name):
+def kwargs_of_wf_step(
+    workflow: Workflow, 
+    wf_step_name: str
+) -> dict:
     """
     Returns a dictionary with kwargs specified by the function and parameters
     of a specific workflow step

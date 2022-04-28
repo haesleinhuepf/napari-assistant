@@ -52,22 +52,26 @@ def clear_and_load_workflow(
 # EXPERIMENTAL        
 def _change_widget_parameters(
     manager_workflow: Workflow, 
-    updated_workflow:Workflow
+    updated_workflow:Workflow,
+    widgets: dict,
 ) -> None:
     from ._workflow_io_utility import category_kwargs, kwargs_of_wf_step
+
     for key in manager_workflow._tasks.keys():
         if manager_workflow._tasks[key] != updated_workflow._tasks[key]:
-            if key in manager_workflow.sources_of(key):
-                return # change input image
-            # make adapter and change widget parameters
-        widget = None # still need to find a way to access it!
-        # setting the right parameters
+            kwargs = kwargs_of_wf_step(updated_workflow,key)
+            for param_name, value in kwargs.items():
+                if value in manager_workflow.sources_of(key):
+                    pass # change input image
+        
+            widget = widgets[key]
+            # setting the right parameters
 
-        cat_kwargs = category_kwargs(
-            updated_workflow._tasks[key][0],
-            kwargs_of_wf_step(updated_workflow,key),
-        )
-        for k,v in cat_kwargs.items():
-            widget[k].value = v
+            cat_kwargs = category_kwargs(
+                updated_workflow._tasks[key][0],
+                kwargs,
+            )
+            for k,v in cat_kwargs.items():
+                widget[k].value = v
 
         
