@@ -360,7 +360,7 @@ class Assistant(QWidget):
             # undo workflow step: workflow is now the undone workflow
             undo_wf: Workflow = controller.undo()
             controller.freeze_stacks = True
-            if len(undo_wf._tasks.keys()) == len(workflow._tasks.keys()):
+            if set(undo_wf._tasks.keys()) == set(workflow._tasks.keys()):
                 widgets_dict = {
                     key:self._layers[self._viewer.layers[key]][1] 
                     for key in workflow._tasks.keys()
