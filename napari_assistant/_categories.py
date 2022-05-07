@@ -336,6 +336,7 @@ def collect_from_npe2_if_installed():
                         menu = t[1]
                         kwargs = {}
                         w = factory(**kwargs)
+                        menu = menu.replace(" > ", ">")
                         result[menu] = w._function
     return result
 
@@ -368,7 +369,7 @@ def filter_operations(menu_name: str):
     """
     result = {}
     for k,v in all_operations().items():
-        if menu_name in k:
+        if menu_name+">" in k:
             result[k] = v
     return result
 
