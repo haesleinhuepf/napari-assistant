@@ -49,6 +49,8 @@ class Assistant(QWidget):
         icon_grid.itemClicked.connect(self._on_item_clicked)
 
         self.seach_field = QLineEdit("")
+        self.seach_field.setPlaceholderText("Enter operation or plugin name to search")
+
         def text_changed(*args, **kwargs):
             search_string = self.seach_field.text().lower()
             icon_grid.clear()
