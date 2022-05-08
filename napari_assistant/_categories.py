@@ -148,7 +148,7 @@ CATEGORIES = {
         exclude=("combine",),
         color_map="turbo",
         blending="translucent",
-        tools_menu="Measurement",
+        tools_menu="None",
     ),
     "Measure labeled image": Category(
         name="Measure labeled image",
@@ -160,7 +160,7 @@ CATEGORIES = {
         exclude=("label comparison",),
         color_map="turbo",
         blending="translucent",
-        tools_menu="Measurement",
+        tools_menu="None",
     ),
     "Compare label images": Category(
         name="Compare label images",
@@ -195,7 +195,7 @@ CATEGORIES = {
         default_values=[1, 100],
         include=('label processing', 'combine'),
         exclude=("neighbor",),
-        tools_menu="Label filters",
+        tools_menu="Segmentation post-processing",
     ),
     "Mesh": Category(
         name="Mesh",
