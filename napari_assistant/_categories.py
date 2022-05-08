@@ -21,7 +21,7 @@ class Category:
     inputs: Sequence[Type]
     default_op: str
     default_values : Sequence[float]
-    output: str = "image"  # or labels
+    output: str = "image"  # or labels or dataframe
     # categories
     include: Sequence[str] = field(default_factory=tuple)
     exclude: Sequence[str] = field(default_factory=tuple)
@@ -30,6 +30,7 @@ class Category:
     blending : str = "translucent"
     tool_tip : str = ""
     tools_menu : str = None
+    auto_call : bool = True
 
 
 CATEGORIES = {
@@ -205,7 +206,17 @@ CATEGORIES = {
         blending="additive",
         tools_menu="Visualization",
     ),
-
+    "Measurement": Category(
+        name="Measurement",
+        description="Measure features and show results in a table.",
+        inputs=(ImageInput, LabelsInput),
+        output="dataframe",
+        default_op="Regionprops (nsr)",
+        default_values=[],
+        include=(),
+        tools_menu="Measurement",
+        auto_call=False
+    ),
 }
 
 
@@ -280,6 +291,8 @@ def collect_from_tools_menu_if_installed():
         print("Assistant skips harvesting tools menu as it's not installed.")
         return {}
 
+    import pandas
+
     allowed_types = ["napari.types.LabelsData", "napari.types.ImageData", "int", "float", "str", "bool",
                      "napari.viewer.Viewer", "napari.Viewer"]
     allowed_types = allowed_types + ["<class '" + t + "'>" for t in allowed_types]
@@ -304,7 +317,9 @@ def collect_from_tools_menu_if_installed():
                 continue
 
             # return type must be image or label_image
-            if sig.return_annotation not in [napari.types.LabelsData, "napari.types.LabelsData", napari.types.ImageData, "napari.types.ImageData"]:
+            if sig.return_annotation not in [napari.types.LabelsData, "napari.types.LabelsData",
+                                             napari.types.ImageData, "napari.types.ImageData",
+                                             pandas.DataFrame, "pandas.DataFrame"]:
                 continue
 
             result[k] = f
@@ -413,7 +428,11 @@ def operations_in_menu(category, search_string: str = None):
 
         # only keep the function in this category if it matches
         if num_image_parameters_in_category == num_image_parameters_in_function:
-            result.append(name)
+            if category.name == "Measurement":
+                if str(sig.return_annotation) == "pandas.DataFrame":
+                    result.append(name)
+            else:
+                result.append(name)
 
     return result
 

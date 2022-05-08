@@ -188,9 +188,12 @@ class Assistant(QWidget):
             pass # this happens if input0 should be labels but we provide an image
         # call the function widget &
         # track the association between the layer and the gui that generated it
-        self._layers[gui()] = (dw, gui)
-        # turn on auto_call, and make sure that if the input changes we update
-        gui._auto_call = True
+        if category.output in ['image', 'labels']:
+            layer = gui()
+            if layer is not None:
+                self._layers[layer] = (dw, gui)
+        # optionally turn on auto_call, and make sure that if the input changes we update
+        gui._auto_call = category.auto_call
         self._connect_to_all_layers()
 
     def _refesh_data(self, event):

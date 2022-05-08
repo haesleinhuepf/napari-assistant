@@ -48,12 +48,19 @@ category_args = [
     ("a", BoolType, False),
     ("b", BoolType, False),
     ("c", BoolType, False),
+    ("d", BoolType, False),
+    ("e", BoolType, False),
+    ("f", BoolType, False),
+    ("g", BoolType, False),
+    ("h", BoolType, False),
+    ("i", BoolType, False),
+    ("j", BoolType, False),
     ("k", StringType, ""),
     ("l", StringType, ""),
     ("m", StringType, ""),
 ]
 category_args_numeric = ["x", "y", "z", "u", "v", "w"]
-category_args_bool = ["a", "b", "c"]
+category_args_bool = ["a", "b", "c", "d", "e", "f", "g","h","i","j"]
 category_args_text = ["k", "l", "m"]
 
 def num_positional_args(func, types=[np.ndarray, napari.types.ImageData, napari.types.LabelsData, Image_type, int, str, float, bool]) -> int:
@@ -134,14 +141,15 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
         return gpu_out, args
     else:
         args = (*gpu_ins, *args)[:nargs+1]
-        kwargs = {}
 
         import inspect
         sig = inspect.signature(cle_function)
-        #for k, v in sig.parameters.items():
-        #    print(k, v.annotation)
-        #    if k == "viewer" or k == "napari_viewer" or "napari.viewer.Viewer" in str(v):
-        #        kwargs[k] = viewer
+
+        # pass viewer if requested
+        kwargs = {}
+        for k, v in sig.parameters.items():
+            if k == "viewer" or k == "napari_viewer" or "napari.viewer.Viewer" in str(v):
+                kwargs[k] = viewer
 
         # Make sure that the annotated types are really passed to a given function
         for i, k in enumerate(list(sig.parameters.keys())):
@@ -203,6 +211,10 @@ def _show_result(
     layer : Optional[Layer]
         The created/udpated layer, or None if no viewer is present.
     """
+    if layer_type == "dataframe":
+        # todo: in case an operation returns a dataframe; do we need to do anything with it?
+        return None
+
     #print("OP ID ", op_id)
     if not viewer:
         logger.warning("no viewer, cannot add image")
@@ -360,8 +372,10 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                     blending=category.blending,
                     scale=inputs[0].scale,
                 )
+            if result_layer is None:
+                return None
 
-            # notify workflow manage that something was created / updated
+            # notify workflow manager that something was created / updated
             try:
                 from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
@@ -387,7 +401,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
     gui_function.__signature__ = _generate_signature_for_category(category, search_string)
 
     # create the widget
-    widget = magicgui(gui_function, auto_call=True)
+    widget = magicgui(gui_function, auto_call=category.auto_call)
     widget.native.setMinimumWidth(100)
     modify_layout(widget.native, button_size=button_size)
 
