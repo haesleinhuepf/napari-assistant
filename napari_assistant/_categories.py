@@ -164,14 +164,16 @@ CATEGORIES = {
     ),
     "Compare label images": Category(
         name="Compare label images",
-        description="Measure and visualize overlap and \nnonzero pixel count/ratio of labeled \nobjects in two label images.",
+        description="Measure and visualize differences \nof labeled objects in two label images.",
         inputs=(LabelsInput, LabelsInput),
+        output="image",
         default_op="label_overlap_count_map (clesperanto)",
         default_values=[],
         include=("combine","label measurement", "map", "label comparison",),
+        exclude=(),
         color_map="turbo",
         blending="translucent",
-        tools_menu="Measurement",
+        tools_menu="None",
     ),
     "Label neighbor filters": Category(
         name="Label neighbor filters",
