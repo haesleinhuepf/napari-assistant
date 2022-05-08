@@ -228,7 +228,7 @@ def _show_result(
     if clims[0] == clims[1]:
         clims = None
 
-    # conversion will be done inside napari. We can continue working with the OCL-array from here.
+    # conversion will be done inside napari. We can continue working with the potentially OCL-array from here.
     data = gpu_out
 
     try:
