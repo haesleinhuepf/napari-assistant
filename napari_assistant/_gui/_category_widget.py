@@ -301,7 +301,7 @@ def _generate_signature_for_category(category: Category, search_string:str= None
     return result
 
 
-def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24) -> magicgui.widgets.FunctionGui[Layer]:
+def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=40) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
 
     Parameters
