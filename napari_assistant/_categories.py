@@ -21,7 +21,7 @@ class Category:
     inputs: Sequence[Type]
     default_op: str
     default_values : Sequence[float]
-    output: str = "image"  # or labels
+    output: str = "image"  # or labels or dataframe
     # categories
     include: Sequence[str] = field(default_factory=tuple)
     exclude: Sequence[str] = field(default_factory=tuple)
@@ -30,6 +30,7 @@ class Category:
     blending : str = "translucent"
     tool_tip : str = ""
     tools_menu : str = None
+    auto_call : bool = True
 
 
 CATEGORIES = {
@@ -69,7 +70,7 @@ CATEGORIES = {
         inputs=(LayerInput, LayerInput),
         default_op="add_images (clesperanto)",
         include=("combine",),
-        exclude=("map",),
+        exclude=("map", 'combine labels',),
         default_values=[1, 1],
         tools_menu="Image math",
     ),
@@ -126,6 +127,17 @@ CATEGORIES = {
         exclude=("combine",),
         tools_menu="Segmentation post-processing",
     ),
+    "Combine labels": Category(
+        name="Combine labels",
+        description="Process label images multiple label image\nto create a new label image.",
+        inputs=(LabelsInput,LabelsInput,),
+        default_op="combine_labels (clesperanto)",
+        output="labels",
+        default_values=[2, 100],
+        include=("label processing","combine labels"),
+        exclude=(),
+        tools_menu="Segmentation post-processing",
+    ),
     "Measure labels": Category(
         name="Measure labels",
         description="Measure and visualize spatial\nfeatures of labeled objects.",
@@ -136,7 +148,7 @@ CATEGORIES = {
         exclude=("combine",),
         color_map="turbo",
         blending="translucent",
-        tools_menu="Measurement",
+        tools_menu="None",
     ),
     "Measure labeled image": Category(
         name="Measure labeled image",
@@ -148,18 +160,20 @@ CATEGORIES = {
         exclude=("label comparison",),
         color_map="turbo",
         blending="translucent",
-        tools_menu="Measurement",
+        tools_menu="None",
     ),
     "Compare label images": Category(
         name="Compare label images",
-        description="Measure and visualize overlap and \nnonzero pixel count/ratio of labeled \nobjects in two label images.",
+        description="Measure and visualize differences \nof labeled objects in two label images.",
         inputs=(LabelsInput, LabelsInput),
+        output="image",
         default_op="label_overlap_count_map (clesperanto)",
         default_values=[],
         include=("combine","label measurement", "map", "label comparison",),
+        exclude=(),
         color_map="turbo",
         blending="translucent",
-        tools_menu="Measurement",
+        tools_menu="None",
     ),
     "Label neighbor filters": Category(
         name="Label neighbor filters",
@@ -181,7 +195,7 @@ CATEGORIES = {
         default_values=[1, 100],
         include=('label processing', 'combine'),
         exclude=("neighbor",),
-        tools_menu="Label filters",
+        tools_menu="Segmentation post-processing",
     ),
     "Mesh": Category(
         name="Mesh",
@@ -194,7 +208,17 @@ CATEGORIES = {
         blending="additive",
         tools_menu="Visualization",
     ),
-
+    "Measurement": Category(
+        name="Measurement",
+        description="Measure features and show results in a table.",
+        inputs=(ImageInput, LabelsInput),
+        output="dataframe",
+        default_op="Regionprops (nsr)",
+        default_values=[],
+        include=(),
+        tools_menu="Measurement",
+        auto_call=False
+    ),
 }
 
 
@@ -279,6 +303,8 @@ def collect_from_tools_menu_if_installed():
         print("Assistant skips harvesting tools menu as it's not installed.")
         return {}
 
+    import pandas
+
     allowed_types = ["napari.types.LabelsData", "napari.types.ImageData", "int", "float", "str", "bool",
                      "napari.viewer.Viewer", "napari.Viewer"]
     allowed_types = allowed_types + ["<class '" + t + "'>" for t in allowed_types]
@@ -303,7 +329,9 @@ def collect_from_tools_menu_if_installed():
                 continue
 
             # return type must be image or label_image
-            if sig.return_annotation not in [napari.types.LabelsData, "napari.types.LabelsData", napari.types.ImageData, "napari.types.ImageData"]:
+            if sig.return_annotation not in [napari.types.LabelsData, "napari.types.LabelsData",
+                                             napari.types.ImageData, "napari.types.ImageData",
+                                             pandas.DataFrame, "pandas.DataFrame"]:
                 continue
 
             result[k] = f
@@ -335,6 +363,7 @@ def collect_from_npe2_if_installed():
                         menu = t[1]
                         kwargs = {}
                         w = factory(**kwargs)
+                        menu = menu.replace(" > ", ">")
                         result[menu] = w._function
     return result
 
@@ -367,7 +396,7 @@ def filter_operations(menu_name: str):
     """
     result = {}
     for k,v in all_operations().items():
-        if menu_name in k:
+        if menu_name+">" in k:
             result[k] = v
     return result
 
@@ -411,7 +440,11 @@ def operations_in_menu(category, search_string: str = None):
 
         # only keep the function in this category if it matches
         if num_image_parameters_in_category == num_image_parameters_in_function:
-            result.append(name)
+            if category.name == "Measurement":
+                if str(sig.return_annotation) == "pandas.DataFrame":
+                    result.append(name)
+            else:
+                result.append(name)
 
     return result
 

@@ -31,7 +31,7 @@ with open(filename) as f:
 #use_scm = {"write_to": "napari_pyclesperanto_assistant/_version.py"}
 setup(
     name="napari-assistant",
-    version="0.1.9",
+    version="0.2.0",
     author="Robert Haase, Ryan Savill",
     author_email="robert.haase@tu-dresden.de",
     description="A pocket calculator like interface to image processing in napari",

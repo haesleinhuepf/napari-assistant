@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 from warnings import warn
-from qtpy.QtWidgets import QFileDialog, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QLabel, QSpinBox
+from qtpy.QtWidgets import QFileDialog, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QLabel
 from qtpy.QtGui import QCursor
 from typing import Union
 from .._categories import CATEGORIES, Category, filter_categories
@@ -50,6 +50,8 @@ class Assistant(QWidget):
         icon_grid.itemClicked.connect(self._on_item_clicked)
 
         self.seach_field = QLineEdit("")
+        self.seach_field.setPlaceholderText("Enter operation or plugin name to search")
+
         def text_changed(*args, **kwargs):
             search_string = self.seach_field.text().lower()
             icon_grid.clear()
@@ -107,11 +109,6 @@ class Assistant(QWidget):
 
         self.layout().addWidget(search_and_help)
         self.layout().addWidget(icon_grid)
-
-        self.button_size_spin_box = QSpinBox()
-        self.button_size_spin_box.setValue(40)
-        self.button_size_spin_box.setToolTip("Size of buttons in operation widgets (temporary GUI)")
-        self.layout().addWidget(self.button_size_spin_box)
 
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.setMinimumWidth(345)
@@ -186,7 +183,7 @@ class Assistant(QWidget):
             return False
 
         # make a new widget
-        gui = make_gui_for_category(category, self.seach_field.text(), self._viewer, button_size=self.button_size_spin_box.value())
+        gui = make_gui_for_category(category, self.seach_field.text(), self._viewer)
         # prevent auto-call when adding to the viewer, to avoid double calls
         # do this here rather than widget creation for the sake of
         # non-Assistant-based widgets.
@@ -202,9 +199,12 @@ class Assistant(QWidget):
             pass # this happens if input0 should be labels but we provide an image
         # call the function widget &
         # track the association between the layer and the gui that generated it
-        self._layers[gui()] = (dw, gui)
-        # turn on auto_call, and make sure that if the input changes we update
-        gui._auto_call = True
+        if category.output in ['image', 'labels']:
+            layer = gui()
+            if layer is not None:
+                self._layers[layer] = (dw, gui)
+        # optionally turn on auto_call, and make sure that if the input changes we update
+        gui._auto_call = category.auto_call
         self._connect_to_all_layers()
         return gui
 
