@@ -1,16 +1,18 @@
 from inspect import signature
+from termios import VINTR
 from napari.utils._magicgui import _make_choice_data_setter
 from ._categories import get_category_of_function, get_name_of_function
 from ._gui._category_widget import (
     separate_argnames_by_type,
     kwarg_key_adapter,
     make_gui_for_category,
+    DEFAULT_BUTTON_SIZE,
 )
 from napari import Viewer
-from napari_workflows import Workflow, WorkflowManager
+from napari_workflows import Workflow
 
 # TODO look if comments are accurate
-def initialise_root_functions(workflow, viewer, button_size = 32):
+def initialise_root_functions(workflow: Workflow, viewer: Viewer, button_size: int = DEFAULT_BUTTON_SIZE):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
@@ -99,7 +101,7 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
     
     return widget_dw
 
-def load_remaining_workflow(workflow, viewer, button_size):
+def load_remaining_workflow(workflow: Workflow, viewer: Viewer, button_size: int = DEFAULT_BUTTON_SIZE):
     """
     Loads the remaining workflow once initialise_root_functions has been called with
     the same workflow and the same napari viewer with given button sie. Returns widgets
@@ -197,25 +199,7 @@ def load_remaining_workflow(workflow, viewer, button_size):
         
     return widget_dw
 
-# TODO remove
-def load_workflow_undo_redo(
-    new_workflow: Workflow, 
-    viewer: Viewer):
-    # init
-    manager = WorkflowManager.install(viewer)
-
-    # loading root functions
-    init_undos = initialise_root_functions(new_workflow,viewer,undo_redo_loading=True)
-    #for nothing in range(init_undos):
-    #    manager.undo_redo_controller.undo()
-    print(f'undos initialisation: {init_undos}') # TODO remove
-    # loading remaining functions
-    init_undos = load_remaining_workflow(new_workflow,viewer,undo_redo_loading=True)
-    #for nothing in range(init_undos):
-    #    manager.undo_redo_controller.undo()
-    print(f'undos remaining workflow: {init_undos}') # TODO remove
-
-def make_flexible_gui(func, viewer, autocall = True, button_size = 32):
+def make_flexible_gui(func, viewer: Viewer, autocall: bool = True, button_size: int = DEFAULT_BUTTON_SIZE):
     """
     Function returns a widget with a GUI for the function provided in the parameters,
     that can be added to the napari viewer.
@@ -249,7 +233,7 @@ def make_flexible_gui(func, viewer, autocall = True, button_size = 32):
 
     return gui
 
-def set_choices(workflow, wf_step_name: str, viewer, widget):
+def set_choices(workflow: Workflow, wf_step_name: str, viewer: Viewer, widget):
     """
     Sets the choices for image drop down menu to the images specified by the workflow
 
@@ -275,7 +259,7 @@ def set_choices(workflow, wf_step_name: str, viewer, widget):
     for i, (key, name) in enumerate(image_keywords):
         widget[adapter[key]].choices = get_layers_data_of_name(name, viewer, widget[adapter[key]])
 
-def get_layers_data_of_name(layer_name: str, viewer, gui):
+def get_layers_data_of_name(layer_name: str, viewer: Viewer, gui):
     """
     Returns a choices dictionary which can be utilised to set an input image of a 
     widget with the function set_choices. code modified from napari/utils/_magicgui
@@ -298,7 +282,7 @@ def get_layers_data_of_name(layer_name: str, viewer, gui):
 
     return choices
 
-def wf_steps_with_root_as_input(workflow):
+def wf_steps_with_root_as_input(workflow: Workflow):
     """
     Returns a list of workflow steps that have root images as an input
 
@@ -317,7 +301,7 @@ def wf_steps_with_root_as_input(workflow):
                         break
     return wf_step_with_rootinput
 
-def get_source_keywords_and_sources(workflow, wf_step_name):
+def get_source_keywords_and_sources(workflow: Workflow, wf_step_name: str):
     """
     Returns a list of tuples containing (function_keyword, image_name) for all 
     sources of a workflow step with name: wf_step_name

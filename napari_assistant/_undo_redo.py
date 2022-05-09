@@ -1,6 +1,7 @@
 from napari_assistant._workflow_io_utility import load_remaining_workflow, initialise_root_functions
 from napari_workflows import WorkflowManager, Workflow
 from napari import Viewer
+from ._gui._category_widget import DEFAULT_BUTTON_SIZE
 
 def delete_workflow_widgets_layers(viewer: Viewer) -> None:
     """
@@ -27,12 +28,13 @@ def delete_workflow_widgets_layers(viewer: Viewer) -> None:
     for layer_name in layer_names:
         if layers[layer_name].source.widget:
             layers.remove(layer_name)
+
 # TODO Docstring
 def clear_and_load_workflow(
     viewer: Viewer,
     manager_workflow: Workflow, 
     workflow_to_load: Workflow, 
-    button_size = 32
+    button_size = DEFAULT_BUTTON_SIZE
 ) -> list:
     delete_workflow_widgets_layers(viewer)
     manager_workflow.clear()

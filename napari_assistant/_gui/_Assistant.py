@@ -332,13 +332,11 @@ class Assistant(QWidget):
 
         w_dw = initialise_root_functions(
             self.workflow, 
-            self._viewer, 
-            button_size= self.button_size_spin_box.value(),
+            self._viewer,
         )
         w_dw += load_remaining_workflow(
             self.workflow, 
             self._viewer,
-            button_size=self.button_size_spin_box.value(),
         )
 
         for gui, dw in w_dw:
@@ -374,7 +372,6 @@ class Assistant(QWidget):
                     viewer=self._viewer,
                     manager_workflow=workflow,
                     workflow_to_load=undo_wf,
-                    button_size=self.button_size_spin_box.value()
                 )
 
                 for gui, dw in w_dw:
@@ -413,7 +410,6 @@ class Assistant(QWidget):
                     viewer=self._viewer,
                     manager_workflow = workflow,
                     workflow_to_load=redo_wf,
-                    button_size=self.button_size_spin_box.value()
                 )
 
                 for gui, dw in w_dw:

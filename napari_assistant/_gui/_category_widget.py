@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 VIEWER_PARAM = "viewer"
 OP_NAME_PARAM = "op_name"
 OP_ID = "op_id"
+DEFAULT_BUTTON_SIZE = 24
 
 # We currently support operations with up to 6 numeric parameters, 3 booleans and 3 strings (see lists below)
 FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max}]
@@ -354,7 +355,7 @@ def _get_operation_name_for_category_clicked(category: Category, search_string:s
     else:
         return default_op
 
-def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
+def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=DEFAULT_BUTTON_SIZE, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
 
     Parameters
