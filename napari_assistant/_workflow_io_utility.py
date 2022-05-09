@@ -1,5 +1,4 @@
 from inspect import signature
-from termios import VINTR
 from napari.utils._magicgui import _make_choice_data_setter
 from ._categories import get_category_of_function, get_name_of_function
 from ._gui._category_widget import (
@@ -81,7 +80,7 @@ def initialise_root_functions(workflow: Workflow, viewer: Viewer, button_size: i
                                                             wf_step_name)
             for key, source in key_source_list:
                 widget[key].tooltip = f'Select {source} or equivalent'
-        
+
             # add the final widget to the napari viewer
             dw = viewer.window.add_dock_widget(widget, name = wf_step_name[10:] + '<b> - SELECT INPUT</b>')
         

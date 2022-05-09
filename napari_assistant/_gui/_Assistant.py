@@ -5,7 +5,7 @@ from warnings import warn
 from qtpy.QtWidgets import QFileDialog, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QLabel
 from qtpy.QtGui import QCursor
 from typing import Union
-from .._categories import CATEGORIES, Category, filter_categories
+from .._categories import CATEGORIES, Category, filter_categories, find_function, get_category_of_function
 from ._button_grid import ButtonGrid
 from ._category_widget import make_gui_for_category
 from napari.viewer import Viewer
@@ -340,7 +340,15 @@ class Assistant(QWidget):
         )
 
         for gui, dw in w_dw:
-            self._layers[gui()] = (dw, gui)
+            # call the function widget &
+            # track the association between the layer and the gui that generated it
+            category = get_category_of_function(
+                find_function(gui.op_name.current_choice)
+            )
+            if category.output in ['image', 'labels']:
+                layer = gui()
+                if layer is not None:
+                    self._layers[layer] = (dw, gui)
 
         self._viewer.layers.select_previous()
         self._viewer.layers.select_next()
@@ -375,7 +383,15 @@ class Assistant(QWidget):
                 )
 
                 for gui, dw in w_dw:
-                    self._layers[gui()] = (dw, gui)
+                    # call the function widget &
+                    # track the association between the layer and the gui that generated it
+                    category = get_category_of_function(
+                        find_function(gui.op_name.current_choice)
+                    )
+                    if category.output in ['image', 'labels']:
+                        layer = gui()
+                        if layer is not None:
+                            self._layers[layer] = (dw, gui)
 
                 self._viewer.layers.select_previous()
                 self._viewer.layers.select_next()
@@ -413,7 +429,15 @@ class Assistant(QWidget):
                 )
 
                 for gui, dw in w_dw:
-                    self._layers[gui()] = (dw, gui)
+                    # call the function widget &
+                    # track the association between the layer and the gui that generated it
+                    category = get_category_of_function(
+                        find_function(gui.op_name.current_choice)
+                    )
+                    if category.output in ['image', 'labels']:
+                        layer = gui()
+                        if layer is not None:
+                            self._layers[layer] = (dw, gui)
 
                 self._viewer.layers.select_previous()
                 self._viewer.layers.select_next()
