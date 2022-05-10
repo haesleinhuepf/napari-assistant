@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from inspect import Parameter, Signature, signature
 
-from qtpy import QtCore
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QDoubleSpinBox, QComboBox, QWidget
 
@@ -16,8 +15,7 @@ from typing_extensions import Annotated
 import napari
 import numpy as np
 
-from .._categories import Category, find_function, get_name_of_function
-from qtpy.QtWidgets import QPushButton, QDockWidget
+from .._categories import Category, find_function
 
 try:
     import pyclesperanto_prototype as cle
@@ -32,6 +30,7 @@ if TYPE_CHECKING:
 VIEWER_PARAM = "viewer"
 OP_NAME_PARAM = "op_name"
 OP_ID = "op_id"
+DEFAULT_BUTTON_SIZE = 24
 
 # We currently support operations with up to 6 numeric parameters, 3 booleans and 3 strings (see lists below)
 FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max}]
@@ -354,7 +353,7 @@ def _get_operation_name_for_category_clicked(category: Category, search_string:s
     else:
         return default_op
 
-def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=24, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
+def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=DEFAULT_BUTTON_SIZE, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
 
     Parameters
@@ -543,10 +542,10 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
     return widget
 
 
-def modify_layout(widget, button_size = 32):
+def modify_layout(widget, button_size = DEFAULT_BUTTON_SIZE):
     QTimer.singleShot(100, partial(_modify_layout, widget, button_size))
 
-def _modify_layout(widget, button_size=32):
+def _modify_layout(widget, button_size=DEFAULT_BUTTON_SIZE):
     try:
         if hasattr(widget, "layout"):
             layout = widget.layout()

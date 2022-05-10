@@ -5,10 +5,11 @@ from ._gui._category_widget import (
     separate_argnames_by_type,
     kwarg_key_adapter,
     make_gui_for_category,
+    DEFAULT_BUTTON_SIZE
 )
 
 
-def initialise_root_functions(workflow, viewer, button_size = 32):
+def initialise_root_functions(workflow, viewer, button_size = DEFAULT_BUTTON_SIZE):
     """
     Makes widgets for all functions which have a root image as input. The widgets are 
     added to the viewer and correct input images must be chosen to complete the loading
@@ -100,7 +101,7 @@ def initialise_root_functions(workflow, viewer, button_size = 32):
     
     return widget_dw
 
-def load_remaining_workflow(workflow, viewer, button_size):
+def load_remaining_workflow(workflow, viewer, button_size = DEFAULT_BUTTON_SIZE):
     """
     Loads the remaining workflow once initialise_root_functions has been called with
     the same workflow and the same napari viewer with given button sie. Returns widgets
@@ -200,7 +201,7 @@ def load_remaining_workflow(workflow, viewer, button_size):
         
     return widget_dw
 
-def make_flexible_gui(func, viewer, autocall = True, button_size = 32):
+def make_flexible_gui(func, viewer, autocall = True, button_size = DEFAULT_BUTTON_SIZE):
     """
     Function returns a widget with a GUI for the function provided in the parameters,
     that can be added to the napari viewer.
