@@ -13,8 +13,9 @@ The napari-assistant is a [napari](https://github.com/napari/napari) meta-plugin
 ## Usage
 
 After installing one or more napari plugins that use the napari-assistant as user interface, you can start it from the 
-menu `Tools > Utilities > Assistant (na)` or run `naparia` from the command line. By clicking on the buttons in the 
-assistant, you can setup a workflow for processing the images.
+menu `Tools > Utilities > Assistant (na)` or run `naparia` from the command line. 
+
+By clicking on the buttons in the assistant, you can setup a workflow for processing the images.
 
 ![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/napari-assistant-screenshot.png)
 
