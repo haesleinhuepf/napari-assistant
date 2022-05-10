@@ -438,14 +438,14 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
 
             # notify workflow manager that something was created / updated
             try:
-                from napari_workflows._workflow import WorkflowManager, _layer_name_or_value
+                from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
 
                 # this step basically separates actual arguments from kwargs as this can cause 
                 # conflicts when setting the workflow step. 
                 signat = signature(find_function(op_name))
                 only_args = [
-                    _layer_name_or_value(arg, viewer) for arg, param in zip(used_args,signat.parameters.values()) 
+                    arg for arg, param in zip(used_args,signat.parameters.values()) 
                     if param.default is param.empty
                 ]
                 determined_kwargs = {
