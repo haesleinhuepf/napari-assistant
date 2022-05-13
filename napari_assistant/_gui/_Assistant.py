@@ -37,8 +37,9 @@ class Assistant(QWidget):
         self._viewer.grid.stride = -1
 
         CATEGORIES["Generate code..."] = self._code_menu
-        CATEGORIES["Undo/Redo"] = self._undo_redo_menu
         CATEGORIES["Save and load workflows"] = self._workflow_menu
+        CATEGORIES["Undo"] = self.undo_action
+        CATEGORIES["Redo"] = self.redo_action
 
         CATEGORIES["Search napari hub"] = self.search_napari_hub
         CATEGORIES["Search image.sc"] = self.search_image_sc
@@ -71,11 +72,6 @@ class Assistant(QWidget):
         self.workflow_actions = [
                                  ("Export workflow to file", self.to_file),
                                  ("Load workflow from file", self.load_workflow)
-        ]
-
-        self.undo_redo_actions =[
-            ("Undo", self.undo_action),
-            ("Redo", self.redo_action)
         ]
 
         # add Send to script editor menu in case it's installed
@@ -127,16 +123,6 @@ class Assistant(QWidget):
         menu = QMenu(self)
 
         for name, cb in self.workflow_actions:
-            submenu = menu.addAction(name)
-            submenu.triggered.connect(cb)
-
-        menu.move(QCursor.pos())
-        menu.show()
-
-    def _undo_redo_menu(self):
-        menu = QMenu(self)
-
-        for name, cb in self.undo_redo_actions :
             submenu = menu.addAction(name)
             submenu.triggered.connect(cb)
 
