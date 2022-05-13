@@ -161,7 +161,8 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
 
         logger.info(f"{op_name}(..., {', '.join(map(str, args))})")
         args = ((*gpu_ins, gpu_out) + args)[:nargs]
-        gpu_out = cle_function(*args)
+
+        gpu_out = cle_function(*args, viewer=viewer)
 
         # return output
         return gpu_out, args
@@ -282,7 +283,7 @@ def _show_result(
     return layer
 
 
-def _generate_signature_for_category(category: Category, search_string:str= None) -> Signature:
+def _generate_signature_for_category(category: Category, search_string:str= None, viewer:napari.Viewer = None) -> Signature:
     """Create an inspect.Signature object representing a cle Category.
 
     The output of this function can be used to set function.__signature__ so that
@@ -320,7 +321,7 @@ def _generate_signature_for_category(category: Category, search_string:str= None
 
     # add a viewer.  This allows our widget to know if it's in a viewer
     params.append(
-        Parameter(VIEWER_PARAM, k, annotation="napari.viewer.Viewer", default=None)
+        Parameter(VIEWER_PARAM, k, annotation="napari.viewer.Viewer", default=viewer)
     )
     result = Signature(params)
     #print("Signature", result)
@@ -467,7 +468,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
         return None
 
     gui_function.__name__ = f'do_{category.name.lower().replace(" ", "_")}'
-    gui_function.__signature__ = _generate_signature_for_category(category, search_string)
+    gui_function.__signature__ = _generate_signature_for_category(category, search_string, viewer)
 
     # create the widget
     widget = magicgui(gui_function, auto_call=autocall)

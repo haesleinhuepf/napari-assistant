@@ -276,6 +276,7 @@ def collect_from_pyclesperanto_if_installed():
     """
     Collect all functions from clesperanto that are annotated with "in assistant"
     """
+    from napari_time_slicer import time_slicer
     try:
         import pyclesperanto_prototype as cle
     except ImportError:
@@ -288,7 +289,7 @@ def collect_from_pyclesperanto_if_installed():
         if not callable(c):
             choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
             for choice, func in choices.items():
-                result[c.tools_menu + ">" + choice + " (clesperanto)"] = func
+                result[c.tools_menu + ">" + choice + " (clesperanto)"] = time_slicer(func)
 
     return result
 
