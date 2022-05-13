@@ -16,7 +16,7 @@ from typing_extensions import Annotated
 import napari
 import numpy as np
 
-from .._categories import Category, find_function
+from .._categories import Category, find_function, get_name_of_function
 from qtpy.QtWidgets import QPushButton, QDockWidget
 
 try:
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 VIEWER_PARAM = "viewer"
 OP_NAME_PARAM = "op_name"
 OP_ID = "op_id"
+DEFAULT_BUTTON_SIZE = 24
 
 # We currently support operations with up to 6 numeric parameters, 3 booleans and 3 strings (see lists below)
 FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max}]
@@ -67,6 +68,55 @@ def num_positional_args(func, types=[np.ndarray, napari.types.ImageData, napari.
     params = signature(func).parameters
     return len([p for p in params.values() if p.annotation in types])
 
+def kwarg_key_adapter(func):
+    '''
+    Returns a dictionary mapping keywords between the category kwarg keys used
+    by the napari assistant to the kwarg keys of the input functions as well
+    as the reverse mapping.
+
+    Parameters
+    ----------
+
+    func: function
+        the function for which the mapping should be generated
+    '''
+    adapter = {}
+    sig = signature(func)
+    items = sig.parameters.items()
+    # get the names of positional parameters in the new operation
+    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+        items)
+
+    # go through all parameters and collect their values in an args-array
+    num_count = 0
+    str_count = 0
+    bool_count = 0
+    for key in param_names: 
+        if key in numeric_param_names:
+            adapter[category_args_numeric[num_count]] = key
+            adapter[key] = category_args_numeric[num_count]
+            num_count += 1
+        elif key in bool_param_names:
+            adapter[category_args_bool[bool_count]] = key
+            adapter[key] = category_args_bool[bool_count]
+            bool_count += 1
+        elif key in str_param_names:
+            adapter[category_args_text[str_count]] = key
+            adapter[key] = category_args_text[str_count]
+            str_count += 1
+
+    other_count = 0    
+    other_param_names = [
+        name
+        for name, param in items
+        if param.annotation not in {int, str, float, bool}
+    ]
+    for key in other_param_names:
+        adapter["input" + str(other_count)] = key
+        adapter[key] = "input" + str(other_count)
+        other_count += 1
+
+    return adapter
 
 @logger.catch
 def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewer: napari.Viewer = None, **kwargs) -> np.ndarray:
@@ -106,28 +156,13 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     cle_function = find_function(op_name)
     nargs = num_positional_args(cle_function)
 
-    args = []
     new_sig = signature(cle_function)
+    adapter = kwarg_key_adapter(cle_function)
     # get the names of positional parameters in the new operation
-    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+    param_names, foo, bar, foobar = separate_argnames_by_type(
         new_sig.parameters.items())
-
-    # go through all parameters and collect their values in an args-array
-    num_count = 0
-    str_count = 0
-    bool_count = 0
-    for key in param_names:
-        if key in numeric_param_names:
-            value = kwargs[category_args_numeric[num_count]]
-            num_count = num_count + 1
-        elif key in bool_param_names:
-            value = kwargs[category_args_bool[bool_count]]
-            bool_count = bool_count + 1
-        elif key in str_param_names:
-            value = kwargs[category_args_text[str_count]]
-            str_count = str_count + 1
-        args.append(value)
-    args = tuple(args)
+    
+    args = tuple([kwargs[adapter[key]] for key in param_names])
 
     if cle_function.__module__ == "pyclesperanto_prototype":
         # todo: we should handle all functions equally
@@ -234,13 +269,13 @@ def _show_result(
     try:
         # look for an existing layer
         layer = next(x for x in viewer.layers if isinstance(x.metadata, dict) and x.metadata.get(OP_ID) == op_id)
-        logger.debug(f"updating existing layer: {layer}, with id: {op_id}")
+        # logger.debug(f"updating existing layer: {layer}, with id: {op_id}")
         layer.data = data
         layer.name = name
         # layer.translate = translate
     except StopIteration:
         # otherwise create a new one
-        logger.debug(f"creating new layer for id: {op_id}")
+        # logger.debug(f"creating new layer for id: {op_id}")
         add_layer = getattr(viewer, f"add_{layer_type}")
         kwargs = dict(name=name, metadata={OP_ID: op_id})
         if layer_type == "image":
@@ -300,8 +335,27 @@ def _generate_signature_for_category(category: Category, search_string:str= None
     #print("Signature", result)
     return result
 
+def _get_operation_name_for_category_clicked(category: Category, search_string:str= None) -> str:
+    """Create an inspect.Signature object representing a cle Category.
 
-def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=40) -> magicgui.widgets.FunctionGui[Layer]:
+    The output of this function is the operation name for a clicked cataegory given a search string
+    """
+    # Add valid operations choices (will create the combo box)
+    from .._categories import operations_in_menu
+    choices = list(operations_in_menu(category, search_string))
+
+    default_op = category.default_op
+    if not any(default_op == op for op in choices):
+        #print("Default-operation is not in list!")
+        default_op = None
+
+    if default_op is None:
+        return choices[0]
+        
+    else:
+        return default_op
+
+def make_gui_for_category(category: Category, search_string:str = None, viewer: napari.Viewer = None, button_size=DEFAULT_BUTTON_SIZE, operation_name:str=None, autocall:bool=True) -> magicgui.widgets.FunctionGui[Layer]:
     """Generate a magicgui widget for a Category object
 
     Parameters
@@ -323,7 +377,14 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
         We modify it's __signature__ below.
         """
         viewer = kwargs.pop(VIEWER_PARAM, None)
-        inputs = [kwargs.pop(k) for k in list(kwargs) if k.startswith("input")]
+        inputs = []
+        for i in [kwargs.pop(k) for k in list(kwargs) if k.startswith("input")]:
+            if isinstance(i, napari.layers.Layer):
+                inputs.append(i)
+            else:
+                from napari_workflows._workflow import _get_layer_from_data
+                inputs.append(_get_layer_from_data(viewer, i))
+
         t_position = None
         if viewer is not None and len(viewer.dims.current_step) == 4:
             # in case we process a 4D-data set, we need read out the current timepoint
@@ -379,7 +440,22 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
             try:
                 from napari_workflows import WorkflowManager
                 manager = WorkflowManager.install(viewer)
-                manager.update(result_layer, find_function(op_name), *used_args)
+
+                # this step basically separates actual arguments from kwargs as this can cause 
+                # conflicts when setting the workflow step. 
+                signat = signature(find_function(op_name))
+                only_args = [
+                    arg for arg, param in zip(used_args,signat.parameters.values()) 
+                    if param.default is param.empty
+                ]
+                determined_kwargs = {
+                    name:value for (name,param),value in zip(signat.parameters.items(),used_args) 
+                    if not (param.default is param.empty)
+                }
+                # debugging prints
+                #print(f'only arguments: {only_args}')
+                #print(f'det kwargs:     {determined_kwargs}')
+                manager.update(result_layer, find_function(op_name), *only_args, **determined_kwargs)
                 #print("notified", result_layer.name, find_function(op_name))
             except ImportError:
                 pass # recording workflows in the WorkflowManager is a nice-to-have at the moment.
@@ -389,6 +465,8 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 if layer in inputs or layer is result_layer:
                     try:
                         viewer.window.remove_dock_widget(widget.native)
+                    # TODO find more elegant or specific solution 
+                    # because this could break some stuff
                     except:
                         pass
 
@@ -401,13 +479,17 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
     gui_function.__signature__ = _generate_signature_for_category(category, search_string)
 
     # create the widget
-    widget = magicgui(gui_function, auto_call=category.auto_call)
+    widget = magicgui(gui_function, auto_call=autocall)
     widget.native.setMinimumWidth(100)
     modify_layout(widget.native, button_size=button_size)
 
+    if operation_name == None:
+        operation_name = _get_operation_name_for_category_clicked(category,search_string)
+    
     # when the operation name changes, we want to update the argument labels
     # to be appropriate for the corresponding cle operation.
     op_name_widget = getattr(widget, OP_NAME_PARAM)
+    op_name_widget.value = operation_name
 
     @op_name_widget.changed.connect
     def update_positional_labels(*_: Any):

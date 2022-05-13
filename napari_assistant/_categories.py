@@ -262,6 +262,16 @@ def all_operations():
     return all_ops
 
 
+def get_name_of_function(func):
+    for k, v in all_operations().items():
+        if v is func:
+            if ">" in k:
+                return k.split(">")[1]
+            else:
+                return k
+    return None
+
+
 def collect_from_pyclesperanto_if_installed():
     """
     Collect all functions from clesperanto that are annotated with "in assistant"
@@ -451,6 +461,16 @@ def find_function(op_name):
     if found_function is None:
         print("No function found for", op_name)
     return found_function
+
+
+def get_category_of_function(func):
+    func_name = get_name_of_function(func)
+    for k, c in CATEGORIES.items():
+        if not callable(c):
+            ops = operations_in_menu(c)
+            if func_name in ops:
+                return c
+    return None
 
 
 def filter_categories(search_string: str = ""):
