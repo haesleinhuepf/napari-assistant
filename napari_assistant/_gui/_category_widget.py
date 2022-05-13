@@ -140,17 +140,8 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     if not inputs or inputs[0] is None:
         return
 
-    # transfer data to gpu
-    if timepoint is None:
-        i0 = inputs[0].data
-        gpu_ins = [i.data if i is not None else i0 for i in inputs]
-    else:
-        i0 = inputs[0].data[timepoint] if len(inputs[0].data.shape) == 4 else inputs[0].data
-        gpu_ins = [(i.data[timepoint] if len(i.data.shape) == 4 else i.data if i is not None else i0) for i in inputs]
-
-    # convert 3d-1-slice-data into 2d data
-    # to support 2d timelapse data
-    gpu_ins = [i if len(i.shape) != 3 or i.shape[0] != 1 else i [0] for i in gpu_ins]
+    i0 = inputs[0].data
+    gpu_ins = [i.data if i is not None else i0 for i in inputs]
 
     # call actual cle function ignoring extra positional args
     cle_function = find_function(op_name)
