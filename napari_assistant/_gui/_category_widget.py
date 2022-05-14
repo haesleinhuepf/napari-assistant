@@ -383,6 +383,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 from napari_workflows._workflow import _get_layer_from_data
                 inputs.append(_get_layer_from_data(viewer, i))
 
+        result_layer = None
         t_position = None
         if viewer is not None and len(viewer.dims.current_step) == 4:
             # in case we process a 4D-data set, we need read out the current timepoint
@@ -392,8 +393,12 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
             currstep_event = viewer.dims.events.current_step
 
             def update(event):
-                currstep_event.disconnect(update)
-                widget()
+                #currstep_event.disconnect(update)
+                if result_layer is not None:
+                    from napari_workflows import WorkflowManager
+                    manager = WorkflowManager.install(viewer)
+                    manager.invalidate([result_layer.name])
+                #widget()
 
             if hasattr(widget, 'updater'):
                 currstep_event.disconnect(widget.updater)

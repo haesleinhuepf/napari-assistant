@@ -208,10 +208,11 @@ class Assistant(QWidget):
         for layer, (dw, mgui) in self._layers.items():
             for w in mgui:
                 if w.value == changed_layer:
-                    mgui()
-                    #from napari_workflows import WorkflowManager
-                    #manager = WorkflowManager.install(self._viewer)
-                    #manager.invalidate([changed_layer.name])
+                    #pass
+                    #mgui()
+                    from napari_workflows import WorkflowManager
+                    manager = WorkflowManager.install(self._viewer)
+                    manager.invalidate([changed_layer.name])
 
     def _connect_to_all_layers(self):
         """Attach an event listener to all layers that are currently open in napari
