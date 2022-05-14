@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from pathlib import Path
 from typing import Callable
 from warnings import warn
@@ -207,7 +208,10 @@ class Assistant(QWidget):
         for layer, (dw, mgui) in self._layers.items():
             for w in mgui:
                 if w.value == changed_layer:
-                    mgui()
+                    #mgui()
+                    from napari_workflows import WorkflowManager
+                    manager = WorkflowManager.install(self._viewer)
+                    manager.invalidate([changed_layer.name])
 
     def _connect_to_all_layers(self):
         """Attach an event listener to all layers that are currently open in napari
@@ -305,11 +309,10 @@ class Assistant(QWidget):
     def load_workflow(self, filename=None):
         from napari_workflows import _io_yaml_v1
         from .. _workflow_io_utility import initialise_root_functions, load_remaining_workflow
-        import warnings
 
         layer_names = [str(lay) for lay in self._viewer.layers]
         if not layer_names:
-            warnings.warn("No images opened. Please open an image before loading the workflow!")
+            warn("No images opened. Please open an image before loading the workflow!")
             return
 
         if not filename:
@@ -340,6 +343,9 @@ class Assistant(QWidget):
         self._viewer.layers.select_next()
 
     def undo_action(self):
+        if len(self._viewer.dims.current_step) > 3:
+            raise NotImplementedError("Undo/redo is not supported for 4D data (yet).")
+
         from .._undo_redo import clear_and_load_workflow, _change_widget_parameters#
         from napari_workflows import WorkflowManager, Workflow
         # install the workflow manager and get the current workflow and controller
@@ -385,6 +391,9 @@ class Assistant(QWidget):
             controller.freeze_stacks = False            
 
     def redo_action(self):
+        if len(self._viewer.dims.current_step) > 3:
+            raise NotImplementedError("Undo/redo is not supported for 4D data (yet).")
+
         from .._undo_redo import clear_and_load_workflow, _change_widget_parameters
         from napari_workflows import WorkflowManager, Workflow
 
