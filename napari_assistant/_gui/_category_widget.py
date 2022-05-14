@@ -247,13 +247,16 @@ def _show_result(
         logger.warning("no viewer, cannot add image")
         return
     # show result in napari
-    clims = [gpu_out.min(), gpu_out.max()]
-
-    if clims[1] == 0:
-        clims[1] = 1
-
-    if clims[0] == clims[1]:
+    if "dask" in str(type(gpu_out)):
         clims = None
+    else:
+        clims = [gpu_out.min(), gpu_out.max()]
+
+        if clims[1] == 0:
+            clims[1] = 1
+
+        if clims[0] == clims[1]:
+            clims = None
 
     # conversion will be done inside napari. We can continue working with the potentially OCL-array from here.
     data = gpu_out
@@ -275,10 +278,13 @@ def _show_result(
             kwargs["blending"] = blending
             kwargs['contrast_limits'] = clims
 
+        print(type(data), data.shape)
         layer = add_layer(data, **kwargs)
 
     if scale is not None:
-        if len(layer.data.shape) <= len(scale):
+        if len(layer.data.shape) == len(scale):
+            layer.scale = scale
+        if len(layer.data.shape) < len(scale):
             layer.scale = scale[-len(layer.data.shape):]
     return layer
 
