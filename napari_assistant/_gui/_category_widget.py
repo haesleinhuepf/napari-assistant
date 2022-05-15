@@ -294,7 +294,8 @@ def _generate_signature_for_category(category: Category, search_string:str= None
     The output of this function can be used to set function.__signature__ so that
     magicgui can convert it into the appropriate widget.
     """
-    search_string = search_string.lower()
+    if search_string is not None:
+        search_string = search_string.lower()
 
     k = Parameter.KEYWORD_ONLY
 
