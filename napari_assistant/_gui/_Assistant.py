@@ -208,7 +208,6 @@ class Assistant(QWidget):
         for layer, (dw, mgui) in self._layers.items():
             for w in mgui:
                 if w.value == changed_layer:
-                    #pass
                     #mgui()
                     from napari_workflows import WorkflowManager
                     manager = WorkflowManager.install(self._viewer)
@@ -369,25 +368,12 @@ class Assistant(QWidget):
                     updated_workflow=undo_wf,
                     widgets=widgets_dict)
             else:
-                w_dw = clear_and_load_workflow(
+                clear_and_load_workflow(
                     viewer=self._viewer,
                     manager_workflow=workflow,
                     workflow_to_load=undo_wf,
+                    layer_list=self._layers
                 )
-
-                for gui, dw in w_dw:
-                    # call the function widget &
-                    # track the association between the layer and the gui that generated it
-                    category = get_category_of_function(
-                        find_function(gui.op_name.current_choice)
-                    )
-                    if category.output in ['image', 'labels']:
-                        layer = gui()
-                        if layer is not None:
-                            self._layers[layer] = (dw, gui)
-
-                self._viewer.layers.select_previous()
-                self._viewer.layers.select_next()
 
             controller.freeze_stacks = False            
 
@@ -418,25 +404,12 @@ class Assistant(QWidget):
                     updated_workflow=redo_wf,
                     widgets=widgets_dict)
             else:
-                w_dw = clear_and_load_workflow(
+                clear_and_load_workflow(
                     viewer=self._viewer,
                     manager_workflow = workflow,
                     workflow_to_load=redo_wf,
+                    layer_list=self._layers
                 )
-
-                for gui, dw in w_dw:
-                    # call the function widget &
-                    # track the association between the layer and the gui that generated it
-                    category = get_category_of_function(
-                        find_function(gui.op_name.current_choice)
-                    )
-                    if category.output in ['image', 'labels']:
-                        layer = gui()
-                        if layer is not None:
-                            self._layers[layer] = (dw, gui)
-
-                self._viewer.layers.select_previous()
-                self._viewer.layers.select_next()
 
             controller.freeze_stacks = False
 

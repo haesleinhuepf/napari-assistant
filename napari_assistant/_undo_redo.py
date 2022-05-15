@@ -33,7 +33,8 @@ def delete_workflow_widgets_layers(viewer: Viewer) -> None:
 def clear_and_load_workflow(
     viewer: Viewer,
     manager_workflow: Workflow, 
-    workflow_to_load: Workflow, 
+    workflow_to_load: Workflow,
+    layer_list:list,
     button_size = DEFAULT_BUTTON_SIZE
 ) -> list:
     delete_workflow_widgets_layers(viewer)
@@ -49,7 +50,21 @@ def clear_and_load_workflow(
         viewer,
         button_size=button_size,
     )
-    return w_dw
+
+    from ._categories import find_function, get_category_of_function
+    for gui, dw in w_dw:
+        # call the function widget and
+        # track the association between the layer and the gui that generated it
+        category = get_category_of_function(
+            find_function(gui.op_name.current_choice)
+        )
+        if category.output in ['image', 'labels']:
+            layer = gui()
+            if layer is not None:
+                layer_list[layer] = (dw, gui)
+
+    viewer.layers.select_previous()
+    viewer.layers.select_next()
 
 # EXPERIMENTAL        
 def _change_widget_parameters(
