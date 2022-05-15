@@ -263,6 +263,10 @@ def all_operations():
 
 
 def get_name_of_function(func):
+    """
+    Searches all functions for a given function
+    and returns its human-readable name
+    """
     for k, v in all_operations().items():
         if v is func:
             if ">" in k:
@@ -341,6 +345,10 @@ def collect_from_tools_menu_if_installed():
 
 
 def collect_from_npe2_if_installed():
+    """
+    Collect all functions provided by the NPE2 interface (napari) which contain
+    a menu name
+    """
     try:
         import npe2
     except ImportError:
@@ -465,6 +473,10 @@ def find_function(op_name):
 
 
 def get_category_of_function(func):
+    """
+    Searches categories for a given function and returns the first (!)
+    category that contains the function
+    """
     func_name = get_name_of_function(func)
     for k, c in CATEGORIES.items():
         if not callable(c):
