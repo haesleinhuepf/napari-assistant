@@ -97,4 +97,22 @@ Last but not least, to make your napari-plugin is listed in the napari-hub when 
 you mention it in your `readme`.
 
 ## Feedback welcome!
+
 The napari-assistant is developed in the open because we believe in the open source community. Feel free to drop feedback as [github issue](https://github.com/haesleinhuepf/napari-assistant/issues) or via [image.sc](https://image.sc)
+
+## Contributing
+
+Contributions are very welcome. Please ensure
+the test coverage at least stays the same before you submit a pull request.
+
+## License
+
+Distributed under the terms of the [BSD-3] license,
+"napari-assistant" is free and open source software
+
+## Acknowledgements
+This project was supported by the Deutsche Forschungsgemeinschaft under Germany’s Excellence Strategy – EXC2068 - Cluster of Excellence "Physics of Life" of TU Dresden. 
+This project has been made possible in part by grant number [2021-240341 (Napari plugin accelerator grant)](https://chanzuckerberg.com/science/programs-resources/imaging/napari/improving-image-processing/) from the Chan Zuckerberg Initiative DAF, an advised fund of the Silicon Valley Community Foundation.
+
+[BSD-3]: http://opensource.org/licenses/BSD-3-Clause
+
