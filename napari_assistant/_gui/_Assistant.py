@@ -170,7 +170,7 @@ class Assistant(QWidget):
             return False
 
         # make a new widget
-        gui = make_gui_for_category(category, self.seach_field.text(), self._viewer)
+        gui = make_gui_for_category(category, self.seach_field.text(), self._viewer,autocall=category.auto_call)
         # prevent auto-call when adding to the viewer, to avoid double calls
         # do this here rather than widget creation for the sake of
         # non-Assistant-based widgets.
