@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 from pathlib import Path
 from typing import Callable
 from warnings import warn
 from qtpy.QtWidgets import QFileDialog, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QLabel
 from qtpy.QtGui import QCursor
 from typing import Union
-from .._categories import CATEGORIES, Category, filter_categories
+from .._categories import CATEGORIES, Category, filter_categories, find_function, get_category_of_function
 from ._button_grid import ButtonGrid
 from ._category_widget import make_gui_for_category
 from napari.viewer import Viewer
@@ -38,6 +39,8 @@ class Assistant(QWidget):
 
         CATEGORIES["Generate code..."] = self._code_menu
         CATEGORIES["Save and load workflows"] = self._workflow_menu
+        CATEGORIES["Undo"] = self.undo_action
+        CATEGORIES["Redo"] = self.redo_action
 
         CATEGORIES["Search napari hub"] = self.search_napari_hub
         CATEGORIES["Search image.sc"] = self.search_image_sc
@@ -190,6 +193,7 @@ class Assistant(QWidget):
         # optionally turn on auto_call, and make sure that if the input changes we update
         gui._auto_call = category.auto_call
         self._connect_to_all_layers()
+        return gui
 
     def _refesh_data(self, event):
         self._refresh(event.source)
@@ -204,7 +208,10 @@ class Assistant(QWidget):
         for layer, (dw, mgui) in self._layers.items():
             for w in mgui:
                 if w.value == changed_layer:
-                    mgui()
+                    #mgui()
+                    from napari_workflows import WorkflowManager
+                    manager = WorkflowManager.install(self._viewer)
+                    manager.invalidate([changed_layer.name])
 
     def _connect_to_all_layers(self):
         """Attach an event listener to all layers that are currently open in napari
@@ -270,7 +277,7 @@ class Assistant(QWidget):
                 try:
                     Popen([executable, "-y", str(filename)])
                 except Exception as e:
-                    warnings.warn(f"Failed to execute notebook: {e}")
+                    warn(f"Failed to execute notebook: {e}")
         return nb
 
 
@@ -302,21 +309,109 @@ class Assistant(QWidget):
     def load_workflow(self, filename=None):
         from napari_workflows import _io_yaml_v1
         from .. _workflow_io_utility import initialise_root_functions, load_remaining_workflow
-        import warnings
 
         layer_names = [str(lay) for lay in self._viewer.layers]
         if not layer_names:
-            warnings.warn("No images opened. Please open an image before loading the workflow!")
+            warn("No images opened. Please open an image before loading the workflow!")
             return
 
         if not filename:
             filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
         self.workflow = _io_yaml_v1.load_workflow(filename)
 
-        initialise_root_functions(self.workflow,
-                                  self._viewer)
-        load_remaining_workflow(workflow=self.workflow,
-                                viewer=self._viewer)
+        w_dw = initialise_root_functions(
+            self.workflow, 
+            self._viewer,
+        )
+        w_dw += load_remaining_workflow(
+            self.workflow, 
+            self._viewer,
+        )
+
+        for gui, dw in w_dw:
+            # call the function widget &
+            # track the association between the layer and the gui that generated it
+            category = get_category_of_function(
+                find_function(gui.op_name.current_choice)
+            )
+            if category.output in ['image', 'labels']:
+                layer = gui()
+                if layer is not None:
+                    self._layers[layer] = (dw, gui)
+
+        self._viewer.layers.select_previous()
+        self._viewer.layers.select_next()
+
+    def undo_action(self):
+        if len(self._viewer.dims.current_step) > 3:
+            raise NotImplementedError("Undo/redo is not supported for 4D data (yet).")
+
+        from .._undo_redo import clear_and_load_workflow, _change_widget_parameters#
+        from napari_workflows import WorkflowManager, Workflow
+        # install the workflow manager and get the current workflow and controller
+        manager: WorkflowManager = WorkflowManager.install(self._viewer)
+        controller = manager.undo_redo_controller
+        workflow: Workflow = manager.workflow
+        # only reload if there is an undo to be performed
+        if controller.undo_stack:
+
+            # undo workflow step: workflow is now the undone workflow
+            undo_wf: Workflow = controller.undo()
+            controller.freeze_stacks = True
+            if set(undo_wf._tasks.keys()) == set(workflow._tasks.keys()):
+                widgets_dict = {
+                    key:self._layers[self._viewer.layers[key]][1] 
+                    for key in workflow._tasks.keys()
+                }
+                _change_widget_parameters(
+                    manager_workflow=workflow,
+                    updated_workflow=undo_wf,
+                    widgets=widgets_dict)
+            else:
+                clear_and_load_workflow(
+                    viewer=self._viewer,
+                    manager_workflow=workflow,
+                    workflow_to_load=undo_wf,
+                    layer_list=self._layers
+                )
+
+            controller.freeze_stacks = False            
+
+    def redo_action(self):
+        if len(self._viewer.dims.current_step) > 3:
+            raise NotImplementedError("Undo/redo is not supported for 4D data (yet).")
+
+        from .._undo_redo import clear_and_load_workflow, _change_widget_parameters
+        from napari_workflows import WorkflowManager, Workflow
+
+        # install the workflow manager and get the current workflow and controller
+        manager: WorkflowManager = WorkflowManager.install(self._viewer)
+        controller = manager.undo_redo_controller
+        workflow = manager.workflow
+        # only reload if there is an undo to be performed
+        if controller.redo_stack:
+
+            # undo workflow step: workflow is now the undone workflow
+            redo_wf: Workflow = controller.redo()
+            controller.freeze_stacks = True
+            if len(redo_wf._tasks.keys()) == len(workflow._tasks.keys()):
+                widgets_dict = {
+                    key:self._layers[self._viewer.layers[key]][1] 
+                    for key in workflow._tasks.keys()
+                }
+                _change_widget_parameters(
+                    manager_workflow=workflow,
+                    updated_workflow=redo_wf,
+                    widgets=widgets_dict)
+            else:
+                clear_and_load_workflow(
+                    viewer=self._viewer,
+                    manager_workflow = workflow,
+                    workflow_to_load=redo_wf,
+                    layer_list=self._layers
+                )
+
+            controller.freeze_stacks = False
 
     def search_napari_hub(self):
         print("Search napari hub")
