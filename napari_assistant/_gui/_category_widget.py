@@ -150,7 +150,7 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     new_sig = signature(cle_function)
     adapter = kwarg_key_adapter(cle_function)
     # get the names of positional parameters in the new operation
-    param_names, foo, bar, foobar = separate_argnames_by_type(
+    param_names, _, _, _ = separate_argnames_by_type(
         new_sig.parameters.items())
     
     args = tuple([kwargs[adapter[key]] for key in param_names])
@@ -278,7 +278,6 @@ def _show_result(
             kwargs["blending"] = blending
             kwargs['contrast_limits'] = clims
 
-        print(type(data), data.shape)
         layer = add_layer(data, **kwargs)
 
     if scale is not None:
