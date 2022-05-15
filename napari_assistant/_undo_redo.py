@@ -29,7 +29,6 @@ def delete_workflow_widgets_layers(viewer: Viewer) -> None:
         if layers[layer_name].source.widget:
             layers.remove(layer_name)
 
-# TODO Docstring
 def clear_and_load_workflow(
     viewer: Viewer,
     manager_workflow: Workflow, 
@@ -37,6 +36,10 @@ def clear_and_load_workflow(
     layer_list:list,
     button_size = DEFAULT_BUTTON_SIZE
 ) -> list:
+    """
+    Loads a workflow by only initializing operations where the workflow
+    is different from the currently loaded workflow.
+    """
     delete_workflow_widgets_layers(viewer)
     manager_workflow.clear()
 
@@ -72,6 +75,9 @@ def _change_widget_parameters(
     updated_workflow:Workflow,
     widgets: dict,
 ) -> None:
+    """
+    Go through two workflows and update widgets where the workflows are different
+    """
     from ._workflow_io_utility import category_kwargs, kwargs_of_wf_step
 
     for key in manager_workflow._tasks.keys():
@@ -82,8 +88,8 @@ def _change_widget_parameters(
                     pass # change input image
         
             widget = widgets[key]
-            # setting the right parameters
 
+            # setting the right parameters
             cat_kwargs = category_kwargs(
                 updated_workflow._tasks[key][0],
                 kwargs,
