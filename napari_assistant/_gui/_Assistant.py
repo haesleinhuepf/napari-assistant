@@ -167,7 +167,7 @@ class Assistant(QWidget):
         input_layer = self._get_active_layer()
         if not input_layer:
             warn("Please select a layer first")
-            return False
+            return
 
         # make a new widget
         gui = make_gui_for_category(category, self.seach_field.text(), self._viewer,autocall=category.auto_call)
