@@ -27,7 +27,7 @@ class Category:
     exclude: Sequence[str] = field(default_factory=tuple)
     # visualization
     color_map : str = "gray"
-    blending : str = "translucent"
+    blending : str = None
     tool_tip : str = ""
     tools_menu : str = None
     auto_call : bool = True
@@ -147,7 +147,6 @@ CATEGORIES = {
         include=("label measurement", "map"),
         exclude=("combine",),
         color_map="turbo",
-        blending="translucent",
         tools_menu="None",
     ),
     "Measure labeled image": Category(
@@ -159,7 +158,6 @@ CATEGORIES = {
         include=("combine","label measurement", "map",),
         exclude=("label comparison",),
         color_map="turbo",
-        blending="translucent",
         tools_menu="None",
     ),
     "Compare label images": Category(
@@ -172,7 +170,6 @@ CATEGORIES = {
         include=("combine","label measurement", "map", "label comparison",),
         exclude=(),
         color_map="turbo",
-        blending="translucent",
         tools_menu="None",
     ),
     "Label neighbor filters": Category(
@@ -183,7 +180,6 @@ CATEGORIES = {
         default_values=[1, 100],
         include=("neighbor",),
         color_map="turbo",
-        blending="translucent",
         tools_menu="Label neighbor filters",
     ),
     "Label filters": Category(
