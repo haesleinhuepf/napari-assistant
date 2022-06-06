@@ -40,7 +40,7 @@ class Assistant(QWidget):
         CATEGORIES["Generate code..."] = self._code_menu
         CATEGORIES["Save and load workflows"] = self._workflow_menu
         CATEGORIES["Undo"] = self.undo_action
-        CATEGORIES["Redo"] = self.redo_action
+        # CATEGORIES["Redo"] = self.redo_action
 
         CATEGORIES["Search napari hub"] = self.search_napari_hub
         CATEGORIES["Search image.sc"] = self.search_image_sc
