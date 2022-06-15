@@ -1,12 +1,13 @@
+from pyrsistent import b
 from qtpy.QtCore import QSize
-from qtpy.QtGui import QIcon
+from qtpy.QtGui import QIcon, QColor, QBrush
 from qtpy.QtWidgets import QListWidget, QListWidgetItem
 from pathlib import Path
 
 ICON_ROOT = Path(__file__).parent / "icons"
 STYLES = r"""
     QListWidget{
-        min-width: 294;
+        min-width: 340;
         background: none;
         font-size: 8pt;
         color: #eee;
@@ -14,15 +15,30 @@ STYLES = r"""
     QListWidget::item {
         width: 68;
         height: 85;
-        border-radius: 0;
         margin: 1;
         padding: 4;
-        background: #414851;
     }
     QListWidget::item::hover {
-        background: #5A626C;
+        background: #8A929C;
     }
+
 """
+
+def _get_background_brush():
+    background_color = QColor()
+    background_color.setNamedColor("#414851")
+    background = QBrush(1)
+    background.setColor(background_color)
+
+    return background
+
+def _get_highlight_brush():
+    highlight_color = QColor()
+    highlight_color.setNamedColor("#545b64")  #brighter highlight option: "#68707a"
+    highlight = QBrush(1)
+    highlight.setColor(highlight_color)
+
+    return highlight
 
 
 def _get_icon(name):
@@ -41,6 +57,8 @@ class ButtonGrid(QListWidget):
         self.setIconSize(QSize(64, 44))
         self.setWordWrap(True)
         self.setStyleSheet(STYLES)
+        self.setSpacing(2)
+        self.item_mapping = {}
 
 
 
@@ -49,6 +67,9 @@ class ButtonGrid(QListWidget):
             super().addItem(label)
 
         item = QListWidgetItem(QIcon(_get_icon(label)), label)
+        self.item_mapping[label] = item
+        item.setBackground(_get_background_brush())
+        
         if tool_tip is not None:
             item.setToolTip(tool_tip)
         super().addItem(item)

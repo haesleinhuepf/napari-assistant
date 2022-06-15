@@ -21,6 +21,7 @@ class Category:
     inputs: Sequence[Type]
     default_op: str
     default_values : Sequence[float]
+    next_step_suggestions: Sequence[str] = field(default_factory=list)
     output: str = "image"  # or labels or dataframe
     # categories
     include: Sequence[str] = field(default_factory=tuple)
@@ -40,6 +41,13 @@ CATEGORIES = {
         inputs=(ImageInput,),
         default_op="gaussian_blur (clesperanto)",
         default_values=[1, 1, 0],
+        next_step_suggestions=[
+            "Remove background",
+            "Binarize",
+            "Label",
+            "Combine",
+            "Filter",
+        ],
         include=("filter", "denoise"),
         exclude=("combine",),
         tools_menu="Filtering / noise removal",
@@ -50,6 +58,12 @@ CATEGORIES = {
         inputs=(ImageInput,),
         default_op="top_hat_box (clesperanto)",
         default_values=[10, 10, 0],
+        next_step_suggestions=[
+            "Binarize",
+            "Label",
+            "Filter",
+
+        ],
         include=("filter", "background removal"),
         exclude=("combine",),
         tools_menu="Filtering / background removal",
@@ -60,6 +74,11 @@ CATEGORIES = {
         inputs=(ImageInput,),
         default_op="gamma_correction (clesperanto)",
         default_values=[1, 1, 0],
+        next_step_suggestions=[
+            "Binarize",
+            "Label",
+            "Combine",
+        ],
         include=("filter",),
         exclude=("combine", "denoise", "background removal", "binary processing"),
         tools_menu="Filtering",
@@ -72,6 +91,11 @@ CATEGORIES = {
         include=("combine",),
         exclude=("map", 'combine labels',),
         default_values=[1, 1],
+        next_step_suggestions=[
+            "Binarize",
+            "Label",
+            "Filter",
+        ],
         tools_menu="Image math",
     ),
     "Transform": Category(
@@ -81,6 +105,14 @@ CATEGORIES = {
         default_op="sub_stack (clesperanto)",
         output="image",  # can also be labels
         default_values=[0, 0, 0, 1, 1],
+        next_step_suggestions=[
+            "Remove noise",
+            "Remove background",
+            "Binarize",
+            "Label",
+            "Combine",
+            "Filter",
+        ],
         include=("transform",),
         exclude=("combine",),
         tools_menu="Transform",
@@ -91,6 +123,14 @@ CATEGORIES = {
         inputs=(LayerInput,),
         default_op="maximum_z_projection (clesperanto)",
         default_values=[1, 1, 1],
+        next_step_suggestions=[
+            "Remove noise",
+            "Remove background",
+            "Binarize",
+            "Label",
+            "Combine",
+            "Filter",
+        ],
         output="image",  # can also be labels
         include=("projection",),
         tools_menu="Projection",
@@ -102,6 +142,10 @@ CATEGORIES = {
         default_op="threshold_otsu (clesperanto)",
         output="labels",
         default_values=[1, 1, 0],
+        next_step_suggestions=[
+            "Label",
+            "Process labels",
+        ],
         include=("binarize",),
         exclude=("combine",),
         tools_menu="Segmentation / binarization",
@@ -113,6 +157,16 @@ CATEGORIES = {
         default_op="voronoi_otsu_labeling (clesperanto)",
         output="labels",
         default_values=[2, 2],
+        next_step_suggestions=[
+            "Process labels",
+            "Combine labels",
+            "Measure labels",
+            "Measure labeled image",
+            "Compare label images",
+            "Label neighbor filters",
+            "Measurement",
+             "Mesh",
+        ],
         include=("label",),
         tools_menu="Segmentation / labeling",
     ),
@@ -123,6 +177,15 @@ CATEGORIES = {
         default_op="exclude_labels_on_edges (clesperanto)",
         output="labels",
         default_values=[2, 100],
+        next_step_suggestions=[
+            "Combine labels",
+            "Measure labels",
+            "Measure labeled image",
+            "Compare label images",
+            "Label neighbor filters",
+            "Measurement",
+             "Mesh",
+        ],
         include=("label processing",),
         exclude=("combine",),
         tools_menu="Segmentation post-processing",
@@ -134,6 +197,16 @@ CATEGORIES = {
         default_op="combine_labels (clesperanto)",
         output="labels",
         default_values=[2, 100],
+        next_step_suggestions=[
+            "Process labels",
+            "Measure labels",
+            "Measure labeled image",
+            "Compare label images",
+            "Label filters",
+            "Label neighbor filters",
+            "Measurement",
+             "Mesh",
+        ],
         include=("label processing","combine labels"),
         exclude=(),
         tools_menu="Segmentation post-processing",
@@ -144,6 +217,9 @@ CATEGORIES = {
         inputs=(LabelsInput,),
         default_op="pixel_count_map (clesperanto)",
         default_values=[1, 1],
+        next_step_suggestions=[
+            "Label filters",
+        ],
         include=("label measurement", "map"),
         exclude=("combine",),
         color_map="turbo",
@@ -155,6 +231,9 @@ CATEGORIES = {
         inputs=(ImageInput, LabelsInput),
         default_op="mean_intensity_map (clesperanto)",
         default_values=[1, 1],
+        next_step_suggestions=[
+            "Label filters",
+        ],
         include=("combine","label measurement", "map",),
         exclude=("label comparison",),
         color_map="turbo",
@@ -167,6 +246,9 @@ CATEGORIES = {
         output="image",
         default_op="label_overlap_count_map (clesperanto)",
         default_values=[],
+        next_step_suggestions=[
+            "Label filters",
+        ],
         include=("combine","label measurement", "map", "label comparison",),
         exclude=(),
         color_map="turbo",
@@ -178,6 +260,9 @@ CATEGORIES = {
         inputs=(ImageInput, LabelsInput),
         default_op="mean_of_n_nearest_neighbors_map (clesperanto)",
         default_values=[1, 100],
+        next_step_suggestions=[
+            "Label filters",
+        ],
         include=("neighbor",),
         color_map="turbo",
         tools_menu="Label neighbor filters",
@@ -189,6 +274,13 @@ CATEGORIES = {
         default_op="exclude_labels_with_map_values_out_of_range (clesperanto)",
         output="labels",
         default_values=[1, 100],
+        next_step_suggestions=[
+            "Process labels",
+            "Combine labels",
+            "Compare label images",
+            "Measurement",
+             "Mesh",
+        ],
         include=('label processing', 'combine'),
         exclude=("neighbor",),
         tools_menu="Segmentation post-processing",
@@ -199,6 +291,7 @@ CATEGORIES = {
         inputs=(LabelsInput,),
         default_op="draw_mesh_between_touching_labels (clesperanto)",
         default_values=[1],
+        next_step_suggestions=[],
         include=("label measurement", "mesh"),
         color_map="green",
         blending="additive",
@@ -211,6 +304,7 @@ CATEGORIES = {
         output="dataframe",
         default_op="Regionprops (nsr)",
         default_values=[],
+        next_step_suggestions=[],
         include=(),
         tools_menu="Measurement",
         auto_call=False
@@ -468,12 +562,15 @@ def find_function(op_name):
     return found_function
 
 
-def get_category_of_function(func):
+def get_category_of_function(func = None, func_name = None):
     """
     Searches categories for a given function and returns the first (!)
     category that contains the function
     """
-    func_name = get_name_of_function(func)
+    
+    if func_name is None:
+        func_name = get_name_of_function(func)
+
     for k, c in CATEGORIES.items():
         if not callable(c):
             ops = operations_in_menu(c)
