@@ -68,8 +68,6 @@ class ButtonGrid(QListWidget):
 
         item = QListWidgetItem(QIcon(_get_icon(label)), label)
         self.item_mapping[label] = item
-
-        
         item.setBackground(_get_background_brush())
         
         if tool_tip is not None:
