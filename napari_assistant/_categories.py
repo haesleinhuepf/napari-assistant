@@ -264,7 +264,7 @@ def get_name_of_function(func):
     and returns its human-readable name
     """
     for k, v in all_operations().items():
-        if v.__doc__ is func.__doc__:
+        if v is func or v.__wrapped__ is func:
             if ">" in k:
                 return k.split(">")[1]
             else:
