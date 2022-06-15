@@ -6,6 +6,7 @@ from ._gui._category_widget import (
     kwarg_key_adapter,
     make_gui_for_category,
     DEFAULT_BUTTON_SIZE,
+    LAYER_NAME_PREFIX,
 )
 from napari import Viewer
 from napari_workflows import Workflow
@@ -167,7 +168,10 @@ def load_remaining_workflow(workflow: Workflow, viewer: Viewer, button_size: int
             widget._auto_call = False
         # add the final widget to the napari viewer and set the input images in
         # the dropdown to the specified input images
-        dw = viewer.window.add_dock_widget(widget, name= follower[10:])
+        dw = viewer.window.add_dock_widget(
+            widget, 
+            name= follower[len(LAYER_NAME_PREFIX):],
+            )
         set_choices(workflow= workflow,
                     wf_step_name= follower,
                     viewer= viewer,

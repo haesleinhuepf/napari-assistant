@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QFileDialog, QLineEdit, QVBoxLayout, QHBoxLayout, QWi
 from qtpy.QtGui import QCursor
 from typing import Union
 from .._categories import CATEGORIES, Category, filter_categories, find_function, get_category_of_function
-from ._button_grid import ButtonGrid
+from ._button_grid import ButtonGrid, _get_highlight_brush, _get_background_brush
 from ._category_widget import make_gui_for_category
 from napari.viewer import Viewer
 
@@ -47,17 +47,17 @@ class Assistant(QWidget):
         CATEGORIES["Search BIII"] = self.search_biii
 
         # build GUI
-        icon_grid = ButtonGrid(self)
-        icon_grid.addItems(CATEGORIES)
-        icon_grid.itemClicked.connect(self._on_item_clicked)
+        self.icon_grid = ButtonGrid(self)
+        self.icon_grid.addItems(CATEGORIES)
+        self.icon_grid.itemClicked.connect(self._on_item_clicked)
 
         self.seach_field = QLineEdit("")
         self.seach_field.setPlaceholderText("Enter operation or plugin name to search")
 
         def text_changed(*args, **kwargs):
             search_string = self.seach_field.text().lower()
-            icon_grid.clear()
-            icon_grid.addItems(filter_categories(search_string))
+            self.icon_grid.clear()
+            self.icon_grid.addItems(filter_categories(search_string))
 
         self.seach_field.textChanged.connect(text_changed)
         text_changed()
@@ -71,8 +71,8 @@ class Assistant(QWidget):
 
         # create workflow menu
         self.workflow_actions = [
-                                 ("Export workflow to file", self.to_file),
-                                 ("Load workflow from file", self.load_workflow)
+            ("Export workflow to file", self.to_file),
+            ("Load workflow from file", self.load_workflow),
         ]
 
         # add Send to script editor menu in case it's installed
@@ -105,7 +105,7 @@ class Assistant(QWidget):
         search_and_help.layout().addWidget(help)
 
         self.layout().addWidget(search_and_help)
-        self.layout().addWidget(icon_grid)
+        self.layout().addWidget(self.icon_grid)
 
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.setMinimumWidth(345)
@@ -130,12 +130,37 @@ class Assistant(QWidget):
         menu.move(QCursor.pos())
         menu.show()
 
-    def _on_selection(self, event):
+    def _on_selection(self):
         for layer, (dw, gui) in self._layers.items():
             if layer in self._viewer.layers.selection:
-                dw.show()
+                dw.show()    
             else:
                 dw.hide()
+        self._highlight_next_steps()
+
+    def _highlight_next_steps(self):
+        highlighted_categories = []
+        for layer, (dw, gui) in self._layers.items():
+            if layer in self._viewer.layers.selection:    
+                if dw.name in CATEGORIES:
+                    dw_highlights = [
+                        key for key in CATEGORIES 
+                        if key in CATEGORIES[dw.name].next_step_suggestions
+                    ]
+                    highlighted_categories += dw_highlights
+                
+        for key in CATEGORIES:
+            try:
+                self.icon_grid.item_mapping[key].setBackground(
+                    _get_background_brush()
+                )
+            except RuntimeError:
+                continue
+            if key in highlighted_categories:
+                self.icon_grid.item_mapping[key].setBackground(
+                    _get_highlight_brush()
+                )
+        
 
     def _on_active_layer_change(self, event):
         for layer, (dw, gui) in self._layers.items():
@@ -151,6 +176,7 @@ class Assistant(QWidget):
                 pass
             # remove layer from internal list
             self._layers.pop(layer)
+
 
     def _on_item_clicked(self, item):
         self._activate(CATEGORIES.get(item.text()))
@@ -193,6 +219,7 @@ class Assistant(QWidget):
         # optionally turn on auto_call, and make sure that if the input changes we update
         gui._auto_call = category.auto_call
         self._connect_to_all_layers()
+        self._on_selection()
         return gui
 
     def _refesh_data(self, event):

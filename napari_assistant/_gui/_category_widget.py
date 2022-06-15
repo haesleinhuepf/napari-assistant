@@ -33,7 +33,7 @@ VIEWER_PARAM = "viewer"
 OP_NAME_PARAM = "op_name"
 OP_ID = "op_id"
 DEFAULT_BUTTON_SIZE = 40
-
+LAYER_NAME_PREFIX = "Result of "
 # We currently support operations with up to 6 numeric parameters, 3 booleans and 3 strings (see lists below)
 FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max}]
 BoolType = Annotated[bool, {}]
@@ -431,7 +431,7 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 result_layer = _show_result(
                     result,
                     viewer,
-                    name=f"Result of {op_name}",
+                    name=LAYER_NAME_PREFIX + f"{op_name}",
                     layer_type=category.output,
                     op_id=id(gui_function),
                     cmap=category.color_map,
