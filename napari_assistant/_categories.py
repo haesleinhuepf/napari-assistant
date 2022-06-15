@@ -13,6 +13,27 @@ LayerInput = Annotated[Layer, {"label": "Image or labels"}]
 LabelsInput = Annotated[Labels, {"label": "Labels"}]
 global_magic_opts = {"auto_call": True}
 
+next_steps_at_the_beginning = [
+            "Remove noise",
+            "Remove background",
+            "Binarize",
+            "Label",
+            "Combine",
+            "Filter",
+        ]
+next_steps_after_labeling = [
+            "Process labels",
+            "Combine labels",
+            "Measure labels",
+            "Measure labeled image",
+            "Compare label images",
+            "Measurement",
+            "Mesh",
+        ]
+next_steps_after_measuring = [
+            "Label filters",
+            "Label neighbor filters"
+        ]
 
 @dataclass
 class Category:
@@ -41,13 +62,7 @@ CATEGORIES = {
         inputs=(ImageInput,),
         default_op="gaussian_blur (clesperanto)",
         default_values=[1, 1, 0],
-        next_step_suggestions=[
-            "Remove background",
-            "Binarize",
-            "Label",
-            "Combine",
-            "Filter",
-        ],
+        next_step_suggestions=next_steps_at_the_beginning,
         include=("filter", "denoise"),
         exclude=("combine",),
         tools_menu="Filtering / noise removal",
@@ -61,8 +76,8 @@ CATEGORIES = {
         next_step_suggestions=[
             "Binarize",
             "Label",
+            "Combine",
             "Filter",
-
         ],
         include=("filter", "background removal"),
         exclude=("combine",),
@@ -94,7 +109,6 @@ CATEGORIES = {
         next_step_suggestions=[
             "Binarize",
             "Label",
-            "Filter",
         ],
         tools_menu="Image math",
     ),
@@ -105,14 +119,7 @@ CATEGORIES = {
         default_op="sub_stack (clesperanto)",
         output="image",  # can also be labels
         default_values=[0, 0, 0, 1, 1],
-        next_step_suggestions=[
-            "Remove noise",
-            "Remove background",
-            "Binarize",
-            "Label",
-            "Combine",
-            "Filter",
-        ],
+        next_step_suggestions=next_steps_at_the_beginning,
         include=("transform",),
         exclude=("combine",),
         tools_menu="Transform",
@@ -123,14 +130,7 @@ CATEGORIES = {
         inputs=(LayerInput,),
         default_op="maximum_z_projection (clesperanto)",
         default_values=[1, 1, 1],
-        next_step_suggestions=[
-            "Remove noise",
-            "Remove background",
-            "Binarize",
-            "Label",
-            "Combine",
-            "Filter",
-        ],
+        next_step_suggestions=next_steps_at_the_beginning,
         output="image",  # can also be labels
         include=("projection",),
         tools_menu="Projection",
@@ -157,16 +157,7 @@ CATEGORIES = {
         default_op="voronoi_otsu_labeling (clesperanto)",
         output="labels",
         default_values=[2, 2],
-        next_step_suggestions=[
-            "Process labels",
-            "Combine labels",
-            "Measure labels",
-            "Measure labeled image",
-            "Compare label images",
-            "Label neighbor filters",
-            "Measurement",
-             "Mesh",
-        ],
+        next_step_suggestions=next_steps_after_labeling,
         include=("label",),
         tools_menu="Segmentation / labeling",
     ),
@@ -177,15 +168,7 @@ CATEGORIES = {
         default_op="exclude_labels_on_edges (clesperanto)",
         output="labels",
         default_values=[2, 100],
-        next_step_suggestions=[
-            "Combine labels",
-            "Measure labels",
-            "Measure labeled image",
-            "Compare label images",
-            "Label neighbor filters",
-            "Measurement",
-             "Mesh",
-        ],
+        next_step_suggestions=next_steps_after_labeling,
         include=("label processing",),
         exclude=("combine",),
         tools_menu="Segmentation post-processing",
@@ -197,16 +180,7 @@ CATEGORIES = {
         default_op="combine_labels (clesperanto)",
         output="labels",
         default_values=[2, 100],
-        next_step_suggestions=[
-            "Process labels",
-            "Measure labels",
-            "Measure labeled image",
-            "Compare label images",
-            "Label filters",
-            "Label neighbor filters",
-            "Measurement",
-             "Mesh",
-        ],
+        next_step_suggestions=next_steps_after_labeling,
         include=("label processing","combine labels"),
         exclude=(),
         tools_menu="Segmentation post-processing",
@@ -217,9 +191,7 @@ CATEGORIES = {
         inputs=(LabelsInput,),
         default_op="pixel_count_map (clesperanto)",
         default_values=[1, 1],
-        next_step_suggestions=[
-            "Label filters",
-        ],
+        next_step_suggestions=next_steps_after_measuring,
         include=("label measurement", "map"),
         exclude=("combine",),
         color_map="turbo",
@@ -231,9 +203,7 @@ CATEGORIES = {
         inputs=(ImageInput, LabelsInput),
         default_op="mean_intensity_map (clesperanto)",
         default_values=[1, 1],
-        next_step_suggestions=[
-            "Label filters",
-        ],
+        next_step_suggestions=next_steps_after_measuring,
         include=("combine","label measurement", "map",),
         exclude=("label comparison",),
         color_map="turbo",
@@ -246,9 +216,7 @@ CATEGORIES = {
         output="image",
         default_op="label_overlap_count_map (clesperanto)",
         default_values=[],
-        next_step_suggestions=[
-            "Label filters",
-        ],
+        next_step_suggestions=next_steps_after_measuring,
         include=("combine","label measurement", "map", "label comparison",),
         exclude=(),
         color_map="turbo",
@@ -260,9 +228,7 @@ CATEGORIES = {
         inputs=(ImageInput, LabelsInput),
         default_op="mean_of_n_nearest_neighbors_map (clesperanto)",
         default_values=[1, 100],
-        next_step_suggestions=[
-            "Label filters",
-        ],
+        next_step_suggestions=next_steps_after_labeling,
         include=("neighbor",),
         color_map="turbo",
         tools_menu="Label neighbor filters",
@@ -274,13 +240,7 @@ CATEGORIES = {
         default_op="exclude_labels_with_map_values_out_of_range (clesperanto)",
         output="labels",
         default_values=[1, 100],
-        next_step_suggestions=[
-            "Process labels",
-            "Combine labels",
-            "Compare label images",
-            "Measurement",
-             "Mesh",
-        ],
+        next_step_suggestions=next_steps_after_labeling,
         include=('label processing', 'combine'),
         exclude=("neighbor",),
         tools_menu="Segmentation post-processing",
