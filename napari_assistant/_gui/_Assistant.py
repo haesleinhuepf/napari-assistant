@@ -139,15 +139,18 @@ class Assistant(QWidget):
         self._highlight_next_steps()
 
     def _highlight_next_steps(self):
+        def dock_widget_category(name):
+            if dw.name in CATEGORIES:
+                return CATEGORIES[dw.name]
+            return get_category_of_function(func_name=dw.name)
+
         highlighted_categories = []
         for layer, (dw, gui) in self._layers.items():
-            if layer in self._viewer.layers.selection:    
-                if dw.name in CATEGORIES:
-                    dw_highlights = [
-                        key for key in CATEGORIES 
-                        if key in CATEGORIES[dw.name].next_step_suggestions
-                    ]
-                    highlighted_categories += dw_highlights
+            if layer in self._viewer.layers.selection:
+                category = dock_widget_category(dw.name) 
+                if category is not None:
+                    highlighted_categories += category.next_step_suggestions
+
                 
         for key in CATEGORIES:
             try:

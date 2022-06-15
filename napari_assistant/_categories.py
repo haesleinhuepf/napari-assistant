@@ -562,13 +562,14 @@ def find_function(op_name):
     return found_function
 
 
-def get_category_of_function(func, function_name = None):
+def get_category_of_function(func = None, func_name = None):
     """
     Searches categories for a given function and returns the first (!)
     category that contains the function
     """
     
-    func_name = get_name_of_function(func)
+    if func_name is None:
+        func_name = get_name_of_function(func)
 
     for k, c in CATEGORIES.items():
         if not callable(c):
