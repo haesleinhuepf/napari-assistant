@@ -7,7 +7,7 @@ from pathlib import Path
 ICON_ROOT = Path(__file__).parent / "icons"
 STYLES = r"""
     QListWidget{
-        min-width: 294;
+        min-width: 340;
         background: none;
         font-size: 8pt;
         color: #eee;
@@ -19,7 +19,7 @@ STYLES = r"""
         padding: 4;
     }
     QListWidget::item::hover {
-        background: #888A929C;
+        background: #8A929C;
     }
 
 """
@@ -34,7 +34,7 @@ def _get_background_brush():
 
 def _get_highlight_brush():
     highlight_color = QColor()
-    highlight_color.setNamedColor("#70adff2f")
+    highlight_color.setNamedColor("#545b64")  #brighter highlight option: "#68707a"
     highlight = QBrush(1)
     highlight.setColor(highlight_color)
 
@@ -57,7 +57,7 @@ class ButtonGrid(QListWidget):
         self.setIconSize(QSize(64, 44))
         self.setWordWrap(True)
         self.setStyleSheet(STYLES)
-        self.setSpacing(4)
+        self.setSpacing(2)
         self.item_mapping = {}
 
 
