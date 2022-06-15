@@ -20,6 +20,10 @@ STYLES = r"""
     }
     QListWidget::item::hover {
         background: #8A929C;
+        width: 68;
+        height: 85;
+        margin: 1;
+        padding: 4;
     }
 
 """
@@ -34,7 +38,7 @@ def _get_background_brush():
 
 def _get_highlight_brush():
     highlight_color = QColor()
-    highlight_color.setNamedColor("#545b64")  #brighter highlight option: "#68707a"
+    highlight_color.setNamedColor("#68707a")
     highlight = QBrush(1)
     highlight.setColor(highlight_color)
 
