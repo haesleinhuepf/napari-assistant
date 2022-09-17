@@ -66,6 +66,7 @@ class Assistant(QWidget):
         self.actions = [
             ("Export Python script to file", self.to_python),
             ("Export Jupyter Notebook", self.to_notebook),
+            ("Export Jupyter Notebook using Napari", self.to_notebook_using_napari),
             ("Copy to clipboard", self.to_clipboard),
         ]
 
@@ -273,15 +274,17 @@ class Assistant(QWidget):
             filename = Path(filename).expanduser().resolve()
             filename.write_text(code)
 
+    def to_notebook_using_napari(self, filename=None, execute=True):
+        return self.to_notebook(filename, execute, True)
 
-    def to_notebook(self, filename=None, execute=True):
+    def to_notebook(self, filename=None, execute=True, use_napari=False):
         if not filename:
             filename, _ = QFileDialog.getSaveFileName(self, "Save code as notebook...", ".", "*.ipynb")
         #return Pipeline.from_assistant(self).to_notebook(filename)
 
         from napari_workflows import WorkflowManager
         manager = WorkflowManager.install(self._viewer)
-        code = manager.to_python_code(notebook=True)
+        code = manager.to_python_code(notebook=True, use_napari=use_napari)
 
         import jupytext
 
