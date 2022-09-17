@@ -9,4 +9,4 @@ jupytext
 jupyter
 pandas
 napari-time-slicer>=0.4.4
-napari-workflows>=0.2.0
+napari-workflows>=0.2.4
