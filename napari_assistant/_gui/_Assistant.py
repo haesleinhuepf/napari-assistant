@@ -111,6 +111,8 @@ class Assistant(QWidget):
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.setMinimumWidth(345)
 
+        self._on_selection()
+
     def _code_menu(self):
         menu = QMenu(self)
 
@@ -136,8 +138,14 @@ class Assistant(QWidget):
             if layer in self._viewer.layers.selection:
                 dw.show()    
             else:
-                dw.hide()
+                if layer in self._viewer.layers:
+                    dw.hide()
         self._highlight_next_steps()
+
+        try:
+            _modify_layer_gui(self._viewer)
+        except:
+            pass
 
     def _highlight_next_steps(self):
         def dock_widget_category(name):
@@ -465,3 +473,48 @@ class Assistant(QWidget):
 def _open_url(url):
     import webbrowser
     webbrowser.open(url, new=0, autoraise=True)
+
+# see https://github.com/napari/napari/issues/5127
+def _modify_layer_gui(viewer):
+    from napari._qt.layer_controls.qt_layer_controls_container import QtLayerControlsContainer
+    from napari._qt.layer_controls.qt_image_controls import QtImageControls
+    from napari._qt.layer_controls.qt_image_controls_base import range_to_decimals
+    from qtpy.QtWidgets import QPushButton
+
+    # search for GUI in napari viewer
+    obj = viewer.window.qt_viewer.dockLayerControls
+    for i in range(obj.layout().count()):
+        if obj.layout().itemAt(i) is not None and obj.layout().itemAt(i).widget is not None:
+            item = obj.layout().itemAt(i).widget()
+            if isinstance(item, QtLayerControlsContainer):
+                layer_controls = item
+                if layer_controls is not None:
+                    obj2 = layer_controls
+                    for i in range(obj2.layout().count()):
+                        if obj2.layout().itemAt(i) is not None:
+                            item = obj2.layout().itemAt(i).widget()
+                            if isinstance(item, QtImageControls):
+                                image_controls = item
+
+                                if image_controls is not None:
+                                    # Modify GUI: Add a "Reset" button to the auto-contrast button bar
+                                    def reset_display_range():
+                                        layer = list(viewer.layers.selection)[0]
+                                        layer.contrast_limits_range = [layer.data.min(), layer.data.max()]
+                                        layer.contrast_limits = list(layer.contrast_limits_range)
+
+                                        contrastLimitsSlider = image_controls.contrastLimitsSlider
+                                        decimals = range_to_decimals(
+                                            layer.contrast_limits_range, layer.dtype
+                                        )
+                                        contrastLimitsSlider.setRange(*layer.contrast_limits_range)
+                                        contrastLimitsSlider.setSingleStep(10 ** -decimals)
+                                        contrastLimitsSlider.setValue(layer.contrast_limits)
+
+                                    autoscalebar_widget = image_controls.autoScaleBar
+                                    if autoscalebar_widget is not None and not hasattr(autoscalebar_widget, "_reset_button"):
+                                        autoscalebar_widget._reset_button = QPushButton(('Reset'))
+                                        autoscalebar_widget._reset_button.clicked.connect(reset_display_range)
+                                        autoscalebar_widget.layout().addWidget(autoscalebar_widget._reset_button)
+                                        autoscalebar_widget._auto_btn.setText("Cont.")
+
