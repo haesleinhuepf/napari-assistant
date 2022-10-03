@@ -377,7 +377,7 @@ def collect_from_tools_menu_if_installed():
                 type_annotation = str(sig.parameters[key].annotation)
                 if not "function NewType.<locals>.new_type" in type_annotation:
                     if type_annotation not in allowed_types:
-                        print("Skip", k, "because", str(type_annotation), "not in allowed types")
+                        # print("Skip", k, "because", str(type_annotation), "not in allowed types")
                         skip = True
                         break
             if skip:
