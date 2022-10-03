@@ -18,6 +18,7 @@ import numpy as np
 
 from .._categories import Category, find_function, get_name_of_function
 from qtpy.QtWidgets import QPushButton, QDockWidget
+from magicgui.types import PathLike
 
 try:
     import pyclesperanto_prototype as cle
@@ -38,6 +39,8 @@ LAYER_NAME_PREFIX = "Result of "
 FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max}]
 BoolType = Annotated[bool, {}]
 StringType = Annotated[str, {}]
+PathLikeType = Annotated[PathLike, {}]
+
 PositiveFloatRange = Annotated[float, {"min": 0, "max": np.finfo(np.float32).max}]
 category_args = [
     ("x", FloatRange, 0),
@@ -59,10 +62,14 @@ category_args = [
     ("k", StringType, ""),
     ("l", StringType, ""),
     ("m", StringType, ""),
+    ("o", PathLikeType, ""),
+    ("p", PathLikeType, ""),
+    ("q", PathLikeType, ""),
 ]
 category_args_numeric = ["x", "y", "z", "u", "v", "w"]
 category_args_bool = ["a", "b", "c", "d", "e", "f", "g","h","i","j"]
 category_args_text = ["k", "l", "m"]
+category_args_file = ["o", "p", "q"]
 
 def num_positional_args(func, types=[np.ndarray, napari.types.ImageData, napari.types.LabelsData, Image_type, int, str, float, bool]) -> int:
     params = signature(func).parameters
@@ -84,13 +91,14 @@ def kwarg_key_adapter(func):
     sig = signature(func)
     items = sig.parameters.items()
     # get the names of positional parameters in the new operation
-    param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+    param_names, numeric_param_names, bool_param_names, str_param_names, file_param_names = separate_argnames_by_type(
         items)
 
     # go through all parameters and collect their values in an args-array
     num_count = 0
     str_count = 0
     bool_count = 0
+    file_count = 0
     for key in param_names: 
         if key in numeric_param_names:
             adapter[category_args_numeric[num_count]] = key
@@ -104,12 +112,16 @@ def kwarg_key_adapter(func):
             adapter[category_args_text[str_count]] = key
             adapter[key] = category_args_text[str_count]
             str_count += 1
+        elif key in file_param_names:
+            adapter[category_args_file[file_count]] = key
+            adapter[key] = category_args_file[file_count]
+            file_count += 1
 
     other_count = 0    
     other_param_names = [
         name
         for name, param in items
-        if param.annotation not in {int, str, float, bool}
+        if param.annotation not in {int, str, float, bool, PathLike}
     ]
     for key in other_param_names:
         adapter["input" + str(other_count)] = key
@@ -150,7 +162,7 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     new_sig = signature(cle_function)
     adapter = kwarg_key_adapter(cle_function)
     # get the names of positional parameters in the new operation
-    param_names, _, _, _ = separate_argnames_by_type(
+    param_names, _, _, _, _ = separate_argnames_by_type(
         new_sig.parameters.items())
     
     args = tuple([kwargs[adapter[key]] for key in param_names])
@@ -501,11 +513,12 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
         func = find_function(op_name_widget.value)
         new_sig = signature(func)
         # get the names of positional parameters in the new operation
-        param_names, numeric_param_names, bool_param_names, str_param_names = separate_argnames_by_type(
+        param_names, numeric_param_names, bool_param_names, str_param_names, file_param_names = separate_argnames_by_type(
             new_sig.parameters.items())
         num_count = 0
         str_count = 0
         bool_count = 0
+        file_count = 0
 
         # show needed elements and set right label
         n_params = len(param_names)
@@ -531,6 +544,13 @@ def make_gui_for_category(category: Category, search_string:str = None, viewer: 
                 if str_count < len(str_param_names):
                     arg_func_name = str_param_names[str_count]
                     str_count = str_count + 1
+                else:
+                    wdg.hide()
+                    continue
+            elif arg_gui_type == PathLikeType:
+                if file_count < len(file_param_names):
+                    arg_func_name = file_param_names[file_count]
+                    file_count = file_count + 1
                 else:
                     wdg.hide()
                     continue
@@ -585,7 +605,7 @@ def separate_argnames_by_type(items):
     param_names = [
         name
         for name, param in items
-        if param.annotation in {int, str, float, bool}
+        if param.annotation in {int, str, float, bool, PathLike}
     ]
     numeric_param_names = [
         name
@@ -602,4 +622,9 @@ def separate_argnames_by_type(items):
         for name, param in items
         if param.annotation in {str}
     ]
-    return param_names, numeric_param_names, bool_param_names, str_param_names
+    file_param_names = [
+        name
+        for name, param in items
+        if param.annotation in {PathLike}
+    ]
+    return param_names, numeric_param_names, bool_param_names, str_param_names, file_param_names

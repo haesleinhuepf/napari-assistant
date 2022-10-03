@@ -346,7 +346,7 @@ def category_kwargs(func,kwargs):
 
     sig = signature(func)
     # get the names of positional parameters in the new operation
-    param_names, foo, bar, foobar = separate_argnames_by_type(
+    param_names, foo, bar, foobar, fbar = separate_argnames_by_type(
         sig.parameters.items())
 
     category_kwargs = {adapter[key] : kwargs[key] for key in param_names}

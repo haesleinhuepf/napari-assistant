@@ -361,7 +361,7 @@ def collect_from_tools_menu_if_installed():
     import pandas
 
     allowed_types = ["napari.types.LabelsData", "napari.types.ImageData", "int", "float", "str", "bool",
-                     "napari.viewer.Viewer", "napari.Viewer"]
+                     "napari.viewer.Viewer", "napari.Viewer", "magicgui.types.PathLike", "typing.Union[pathlib.Path, str, bytes]"]
     allowed_types = allowed_types + ["<class '" + t + "'>" for t in allowed_types]
 
     result = {}
@@ -377,7 +377,7 @@ def collect_from_tools_menu_if_installed():
                 type_annotation = str(sig.parameters[key].annotation)
                 if not "function NewType.<locals>.new_type" in type_annotation:
                     if type_annotation not in allowed_types:
-                        #print("Skip", k, "because", str(type_annotation), "not in allowed types")
+                        print("Skip", k, "because", str(type_annotation), "not in allowed types")
                         skip = True
                         break
             if skip:
