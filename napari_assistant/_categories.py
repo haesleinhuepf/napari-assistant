@@ -518,9 +518,21 @@ def find_function(op_name):
     """
     all_ops = all_operations()
     found_function = None
+
+    # find exact match first
     for k, f in all_ops.items():
-        if op_name in k:
+        if ">" in k:
+            k = k.split(">")[1]
+        if op_name == k:
             found_function = f
+            break
+
+    if found_function is None:
+        # find approximate match
+        for k, f in all_ops.items():
+            if op_name in k:
+                found_function = f
+
     if found_function is None:
         print("No function found for", op_name)
     return found_function
