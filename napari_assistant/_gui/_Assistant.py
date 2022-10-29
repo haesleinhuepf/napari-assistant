@@ -67,7 +67,8 @@ class Assistant(QWidget):
             ("Export Python script to file", self.to_python),
             ("Export Jupyter Notebook", self.to_notebook),
             ("Export Jupyter Notebook using Napari", self.to_notebook_using_napari),
-            ("Copy to clipboard", self.to_clipboard),
+            ("Copy Python code to clipboard", self.to_clipboard),
+            ("Generate Napari plugin", self.to_napari_plugin),
         ]
 
         # create workflow menu
@@ -321,6 +322,9 @@ class Assistant(QWidget):
                     warn(f"Failed to execute notebook: {e}")
         return nb
 
+    def to_napari_plugin(self):
+        from .._plugin_generator import make_plugin
+        self._viewer.window.add_dock_widget(make_plugin())
 
     def to_clipboard(self):
         import pyperclip
