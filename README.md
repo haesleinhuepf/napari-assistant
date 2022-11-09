@@ -6,7 +6,8 @@
 [![codecov](https://codecov.io/gh/haesleinhuepf/napari-assistant/branch/master/graph/badge.svg)](https://codecov.io/gh/haesleinhuepf/napari-assistant)
 [![Development Status](https://img.shields.io/pypi/status/napari-assistant.svg)](https://en.wikipedia.org/wiki/Software_release_life_cycle#Alpha)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-assistant)](https://napari-hub.org/plugins/napari-assistant)
-[![DOI](https://zenodo.org/badge/322312181.svg)](https://zenodo.org/badge/latestdoi/322312181)
+[![DOI](https://zenodo.org/badge/463875112.svg)](https://zenodo.org/badge/latestdoi/463875112)
+
 
 The napari-assistant is a [napari](https://github.com/napari/napari) meta-plugin for building image processing workflows. 
 
