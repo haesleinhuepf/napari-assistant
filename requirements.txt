@@ -10,6 +10,3 @@ jupyter
 pandas
 napari-time-slicer>=0.4.4
 napari-workflows>=0.2.4
-dask
-autopep8
-cookiecutter
