@@ -46,50 +46,7 @@ you can also send the current workflow as code to the script editor from the sam
 
 ### Plugin generation
 
-There is also a Napari plugin generator available. Note: For running it you need to be connected to the internet, 
-because a [plugin template](https://github.com/haesleinhuepf/cookiecutter-napari-assistant-plugin) will be downloaded. 
-The plugin generator can be found in the menu `Tools > Utilities > Generate Napari plugin from workflow (na)` and also 
-in the `Generate code...` of the Assistant:
-
-![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/generate_napari_plugin1.png)
-
-In the plugin generator dialog, please enter this information:
-* **output dir:** Folder where the Napari plugin code should be saved. If not specified, the plugin will be stored in the current directory Napari was started from.
-* **plugin name:** Name of the plugin. A folder with this name will be generated in the folder specified above. Plugin names must not contain special characters or spaces. Use `_` instead.
-* **developer name:** Your name as it will be displayed later on the [napari-hub](https://napari-hub.org) in case you decide to publish your plugin.
-* **developer email:** Your email as it will be stored in the configuration of your plugin. This email-address is visible to the public.
-* **github username:** Your username on [github](https://github.com). URLs in the plugin documentation will point to your profile on github.
-* **short description:** Please write one sentence explaining what the plugin is doing.
-* **license:** Choose the open-source license your plugin code will be licensed. If you are not sure which one to use, consult [choosealicense.com](https://choosealicense.com).
-* **tools menu** The menu under `Tools` where your plugin will be found after installing it.
-* **menu name** The menu entry will have this title.
-
-![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/generate_napari_plugin2.png)
-
-After the Napari plugin code has been generated, open it in the integrated development environment (IDE) of your choice. 
-Go through the files in the directory and search for `TODO` entries. Start with the `readme.md` and the `requirements.txt` files:
-
-![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/generate_napari_plugin4.png)
-
-It is highly recommended to inspect the generated code and rename variables to be more meaningful.
-For renaming variables, make use of your IDE's tools. For example variables can be renamed conveniently in [pycharm](https://www.jetbrains.com/pycharm/) using the right-click menu:
-
-![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/generate_napari_plugin3.png)
-
-The `readme.md` file also contains instructions for how to install and distribute your plugin. 
-TL:DR: As a plugin developer you typically execute this command from the terminal within your plugin's root directory to install your plugin in an `editable`. 
-This command allows you to modify the code and test it without the need for re-installing your plugin.
-
-```
-pip install -e .
-```
-
-If installation was successful, you will find your plugin in the menu you specified and a dialog will open requesting the parameters of the generated Python function in `<your_plugin_folder>/<your_plugin_folder>/_function.py`:
-
-![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/generate_napari_plugin5.png)
-
-![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/generate_napari_plugin6.png)
-
+There is also a Napari plugin generator available. Check out [its documentation](https://github.com/haesleinhuepf/napari-assistant-plugin-generator) to learn how napari-assistant compatible plugins can be generated directly from within the assistant.
 
 ## Installation
 
