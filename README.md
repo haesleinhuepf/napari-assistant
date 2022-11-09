@@ -44,6 +44,10 @@ you can also send the current workflow as code to the script editor from the sam
 
 ![img.png](https://github.com/haesleinhuepf/napari-assistant/raw/main/docs/napari_script_editor.png)
 
+### Plugin generation
+
+There is also a Napari plugin generator available. Check out [its documentation](https://github.com/haesleinhuepf/napari-assistant-plugin-generator) to learn how napari-assistant compatible plugins can be generated directly from within the assistant.
+
 ## Installation
 
 It is recommended to install the napari-assistant via one of the plugins that use it as graphical user interface.
