@@ -68,7 +68,6 @@ class Assistant(QWidget):
             ("Export Jupyter Notebook", self.to_notebook),
             ("Export Jupyter Notebook using Napari", self.to_notebook_using_napari),
             ("Copy Python code to clipboard", self.to_clipboard),
-            ("Generate Napari plugin", self.to_napari_plugin),
         ]
 
         # create workflow menu
@@ -81,6 +80,12 @@ class Assistant(QWidget):
         try:
             import napari_script_editor
             self.actions.append(("Send to Script Editor", self.to_script_editor))
+        except ImportError:
+            pass
+        # add plugin generator menu in case it's installed
+        try:
+            import napari_assistant_plugin_generator
+            self.actions.append(("Generate Napari plugin", self.to_napari_plugin))
         except ImportError:
             pass
 
@@ -323,7 +328,7 @@ class Assistant(QWidget):
         return nb
 
     def to_napari_plugin(self):
-        from .._plugin_generator import make_plugin
+        from napari_assistant_plugin_generator import make_plugin
         self._viewer.window.add_dock_widget(make_plugin())
 
     def to_clipboard(self):
