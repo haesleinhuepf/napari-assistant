@@ -36,7 +36,7 @@ OP_ID = "op_id"
 DEFAULT_BUTTON_SIZE = 40
 LAYER_NAME_PREFIX = "Result of "
 # We currently support operations with up to 6 numeric parameters, 3 booleans and 3 strings (see lists below)
-FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max}]
+FloatRange = Annotated[float, {"min": np.finfo(np.float32).min, "max": np.finfo(np.float32).max, "step": 1}]
 BoolType = Annotated[bool, {}]
 StringType = Annotated[str, {}]
 PathLikeType = Annotated[PathLike, {}]
