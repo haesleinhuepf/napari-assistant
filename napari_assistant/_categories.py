@@ -318,6 +318,9 @@ def all_operations():
 def remove_duplicate_operations(all_ops):
     """Remove duplicate operations from all_ops
 
+    This is an internal workaround for the fact that some operations are registered twice.
+    It may become obsolete when napari-pyclesperanto-assistant or its menu entries retired.
+
     Parameters
     ----------
     all_ops : dict
@@ -331,17 +334,28 @@ def remove_duplicate_operations(all_ops):
     # remove duplicates
     new_ops = {}
     for k, v in all_ops.items():
-        other_name = k.replace(" ", "_").\
+        other_name = k.replace(" (box, ", "_box (").\
+                       replace("Gaussian background", "gaussian_background").\
+                       replace("Gaussian ", "gaussian_blur ").\
+                       replace("component labeling", "components labeling box").\
+                       replace(" ", "_").\
                        replace("-", "_").\
                        replace("_/_", " / ").\
                        replace("_(", " (").\
+                       replace("noise_", "noise ").\
+                       replace("background_", "background ").\
+                       replace("_post_", " post-").\
+                       replace(">label_", ">").\
                        lower()
+
         other_name = other_name[0].upper() + other_name[1:]
+
         if other_name != k:
-            if other_name not in all_ops:
-                new_ops[k] = v
-            else:
-                print("Removing duplicate operation: ", k, other_name)
+            if other_name in all_ops:
+                # print("Removing duplicate operation: ", k, other_name)
+                continue
+
+        new_ops[k] = v
     return new_ops
 
 def get_name_of_function(func):
@@ -373,7 +387,7 @@ def collect_from_pyclesperanto_if_installed():
 
     for k, c in CATEGORIES.items():
         if not callable(c):
-            #if len(list(c.include)) > 0:
+            if len(list(c.include)) > 0:
                 choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
                 for choice, func in choices.items():
                     result[c.tools_menu + ">" + choice + " (clesperanto)"] = time_slicer(func)
