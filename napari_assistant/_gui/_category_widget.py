@@ -49,6 +49,10 @@ category_args = [
     ("u", FloatRange, 0),
     ("v", FloatRange, 0),
     ("w", FloatRange, 0),
+    ("w1", FloatRange, 0),
+    ("w2", FloatRange, 0),
+    ("w3", FloatRange, 0),
+    ("w4", FloatRange, 0),
     ("a", BoolType, False),
     ("b", BoolType, False),
     ("c", BoolType, False),
@@ -66,7 +70,7 @@ category_args = [
     ("p", PathLikeType, ""),
     ("q", PathLikeType, ""),
 ]
-category_args_numeric = ["x", "y", "z", "u", "v", "w"]
+category_args_numeric = ["x", "y", "z", "u", "v", "w", "w1", "w2", "w3", "w4"]
 category_args_bool = ["a", "b", "c", "d", "e", "f", "g","h","i","j"]
 category_args_text = ["k", "l", "m"]
 category_args_file = ["o", "p", "q"]
