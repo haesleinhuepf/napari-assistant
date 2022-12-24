@@ -309,8 +309,40 @@ def all_operations():
 
     # combine all
     all_ops = {**cle_ops, **tools_ops, **npe2_ops}
+
+    all_ops = remove_duplicate_operations(all_ops)
+
     return all_ops
 
+
+def remove_duplicate_operations(all_ops):
+    """Remove duplicate operations from all_ops
+
+    Parameters
+    ----------
+    all_ops : dict
+        Dictionary of name-function pairs
+
+    Returns
+    -------
+    dict
+        Dictionary of name-function pairs
+    """
+    # remove duplicates
+    new_ops = {}
+    for k, v in all_ops.items():
+        other_name = k.replace(" ", "_").\
+                       replace("-", "_").\
+                       replace("_/_", " / ").\
+                       replace("_(", " (").\
+                       lower()
+        other_name = other_name[0].upper() + other_name[1:]
+        if other_name != k:
+            if other_name not in all_ops:
+                new_ops[k] = v
+            else:
+                print("Removing duplicate operation: ", k, other_name)
+    return new_ops
 
 def get_name_of_function(func):
     """
@@ -341,9 +373,10 @@ def collect_from_pyclesperanto_if_installed():
 
     for k, c in CATEGORIES.items():
         if not callable(c):
-            choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
-            for choice, func in choices.items():
-                result[c.tools_menu + ">" + choice + " (clesperanto)"] = time_slicer(func)
+            #if len(list(c.include)) > 0:
+                choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
+                for choice, func in choices.items():
+                    result[c.tools_menu + ">" + choice + " (clesperanto)"] = time_slicer(func)
 
     return result
 
