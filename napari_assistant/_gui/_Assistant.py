@@ -367,6 +367,9 @@ class Assistant(QWidget):
 
         if not filename:
             filename, _ = QFileDialog.getOpenFileName(self, "Import workflow ...", ".", "*.yaml")
+        if filename == '':
+            # nothing loaded
+            return
         self.workflow = _io_yaml_v1.load_workflow(filename)
 
         w_dw = initialise_root_functions(
