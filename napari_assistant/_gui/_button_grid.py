@@ -1,4 +1,3 @@
-from pyrsistent import b
 from qtpy.QtCore import QSize
 from qtpy.QtGui import QIcon, QColor, QBrush
 from qtpy.QtWidgets import QListWidget, QListWidgetItem
