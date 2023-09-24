@@ -88,6 +88,12 @@ class Assistant(QWidget):
             self.actions.append(("Generate Napari plugin", self.to_napari_plugin))
         except ImportError:
             pass
+        # add dask plugin into special menu if it's installed
+        try:
+            import napari_parallel
+            self.actions.append(("Process with Dask library", self.to_dask))
+        except ImportError:
+            pass
 
         self.setLayout(QVBoxLayout())
         search_and_help = QWidget()
@@ -287,6 +293,20 @@ class Assistant(QWidget):
         if filename:
             filename = Path(filename).expanduser().resolve()
             filename.write_text(code)
+
+    def to_dask(self, filename=None):
+
+        # import napari library
+        import napari_parallel
+        # create new window for image processing
+        dask_window = napari_parallel.ParallelQWidget.get_dask_window(self._viewer)
+
+        # import workflow manager
+        from napari_workflows import WorkflowManager
+        # create workflow manager
+        manager = WorkflowManager.install(self._viewer)
+        # transmit processing code into dask window
+        dask_window.codeProcessing = manager.to_python_code()
 
     def to_notebook_using_napari(self, filename=None, execute=True):
         return self.to_notebook(filename, execute, True)
