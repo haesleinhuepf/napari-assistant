@@ -13,6 +13,20 @@ def napari_experimental_provide_dock_widget():
 def napari_experimental_provide_function():
     return [_split_stack]
 
+from napari_tools_menu import register_action
+
+@register_action(menu="Scripts > Generate Jupyter Notebook from Workflow (na)")
+def generate_jupyter_notebook_from_workflow(viewer:"napari.Viewer"):
+    from ._gui._Assistant import Assistant
+    assistant = Assistant(viewer)
+    assistant.to_notebook()
+
+
+@register_action(menu="Scripts > Copy Python code representing Workflow (na)")
+def generate_jupyter_notebook_from_workflow(viewer:"napari.Viewer"):
+    from ._gui._Assistant import Assistant
+    assistant = Assistant(viewer)
+    assistant.to_clipboard()
 
 
 def _split_stack(viewer:"napari.Viewer", layer:"napari.layers.Layer", axis:int = 1):
