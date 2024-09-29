@@ -60,7 +60,7 @@ CATEGORIES = {
         name="Remove noise",
         description="Remove noise from images, e.g. by local averaging and blurring.",
         inputs=(ImageInput,),
-        default_op="gaussian_blur (clesperanto)",
+        default_op="gaussian_blur (pyclesperanto)",
         default_values=[1, 1, 0],
         next_step_suggestions=next_steps_at_the_beginning,
         include=("filter", "denoise"),
@@ -71,7 +71,7 @@ CATEGORIES = {
         name="Remove background",
         description="Remove background intensity, e.g. caused\nby out-of-focus light or uneven illumination.",
         inputs=(ImageInput,),
-        default_op="top_hat_box (clesperanto)",
+        default_op="top_hat_box (pyclesperanto)",
         default_values=[10, 10, 0],
         next_step_suggestions=[
             "Binarize",
@@ -87,7 +87,7 @@ CATEGORIES = {
         name="Filter",
         description="Filter images, e.g. to adjust gamma or detect edges.",
         inputs=(ImageInput,),
-        default_op="gamma_correction (clesperanto)",
+        default_op="gamma_correction (pyclesperanto)",
         default_values=[1, 1, 0],
         next_step_suggestions=[
             "Binarize",
@@ -102,7 +102,7 @@ CATEGORIES = {
         name="Combine",
         description="Combine images using pixel-wise mathematical operations.",
         inputs=(LayerInput, LayerInput),
-        default_op="add_images (clesperanto)",
+        default_op="add_images (pyclesperanto)",
         include=("combine",),
         exclude=("map", 'combine labels',),
         default_values=[1, 1],
@@ -116,7 +116,7 @@ CATEGORIES = {
         name="Transform",
         description="Apply spatial transformation to images.",
         inputs=(LayerInput,),
-        default_op="sub_stack (clesperanto)",
+        default_op="sub_stack (pyclesperanto)",
         output="image",  # can also be labels
         default_values=[0, 0, 0, 1, 1],
         next_step_suggestions=next_steps_at_the_beginning,
@@ -128,7 +128,7 @@ CATEGORIES = {
         name="Projection",
         description="Reduce dimensionality of images\nfrom three to two dimensions.",
         inputs=(LayerInput,),
-        default_op="maximum_z_projection (clesperanto)",
+        default_op="maximum_z_projection (pyclesperanto)",
         default_values=[1, 1, 1],
         next_step_suggestions=next_steps_at_the_beginning,
         output="image",  # can also be labels
@@ -139,7 +139,7 @@ CATEGORIES = {
         name="Binarize",
         description="Turn images into binary images.",
         inputs=(LayerInput,),
-        default_op="threshold_otsu (clesperanto)",
+        default_op="threshold_otsu (pyclesperanto)",
         output="labels",
         default_values=[1, 1, 0],
         next_step_suggestions=[
@@ -154,7 +154,7 @@ CATEGORIES = {
         name="Label",
         description="Turn images into label images by labeling objects.",
         inputs=(LayerInput,),
-        default_op="voronoi_otsu_labeling (clesperanto)",
+        default_op="voronoi_otsu_labeling (pyclesperanto)",
         output="labels",
         default_values=[2, 2],
         next_step_suggestions=next_steps_after_labeling,
@@ -165,7 +165,7 @@ CATEGORIES = {
         name="Process labels",
         description="Process label images to improve\nby changing their shape and/or removing\nobjects which don't fulfill certain conditions.",
         inputs=(LabelsInput,),
-        default_op="exclude_labels_on_edges (clesperanto)",
+        default_op="exclude_labels_on_edges (pyclesperanto)",
         output="labels",
         default_values=[2, 100],
         next_step_suggestions=next_steps_after_labeling,
@@ -177,7 +177,7 @@ CATEGORIES = {
         name="Combine labels",
         description="Process label images multiple label image\nto create a new label image.",
         inputs=(LabelsInput,LabelsInput,),
-        default_op="combine_labels (clesperanto)",
+        default_op="combine_labels (pyclesperanto)",
         output="labels",
         default_values=[2, 100],
         next_step_suggestions=next_steps_after_labeling,
@@ -189,7 +189,7 @@ CATEGORIES = {
         name="Measure labels",
         description="Measure and visualize spatial\nfeatures of labeled objects.",
         inputs=(LabelsInput,),
-        default_op="pixel_count_map (clesperanto)",
+        default_op="pixel_count_map (pyclesperanto)",
         default_values=[1, 1],
         next_step_suggestions=next_steps_after_measuring,
         include=("label measurement", "map"),
@@ -201,7 +201,7 @@ CATEGORIES = {
         name="Measure labeled image",
         description="Measure and visualize intensity-based\nfeatures of labeled objects.",
         inputs=(ImageInput, LabelsInput),
-        default_op="mean_intensity_map (clesperanto)",
+        default_op="mean_intensity_map (pyclesperanto)",
         default_values=[1, 1],
         next_step_suggestions=next_steps_after_measuring,
         include=("combine","label measurement", "map",),
@@ -214,7 +214,7 @@ CATEGORIES = {
         description="Measure and visualize differences \nof labeled objects in two label images.",
         inputs=(LabelsInput, LabelsInput),
         output="image",
-        default_op="label_overlap_count_map (clesperanto)",
+        default_op="label_overlap_count_map (pyclesperanto)",
         default_values=[],
         next_step_suggestions=next_steps_after_measuring,
         include=("combine","label measurement", "map", "label comparison",),
@@ -226,7 +226,7 @@ CATEGORIES = {
         name="Label neighbor filters",
         description="Process values associated with labeled objects\naccording to the neighborhood-graph of the labels.",
         inputs=(ImageInput, LabelsInput),
-        default_op="mean_of_n_nearest_neighbors_map (clesperanto)",
+        default_op="mean_of_n_nearest_neighbors_map (pyclesperanto)",
         default_values=[1, 100],
         next_step_suggestions=next_steps_after_labeling,
         include=("neighbor",),
@@ -237,7 +237,7 @@ CATEGORIES = {
         name="Label filters",
         description="Process label images depending on values in corresponding images.\nPleease use parametric maps only as input image.",
         inputs=(ImageInput, LabelsInput),
-        default_op="exclude_labels_with_map_values_out_of_range (clesperanto)",
+        default_op="exclude_labels_with_map_values_out_of_range (pyclesperanto)",
         output="labels",
         default_values=[1, 100],
         next_step_suggestions=next_steps_after_labeling,
@@ -249,7 +249,7 @@ CATEGORIES = {
         name="Mesh",
         description="Draw connectivity meshes between\ncentroids of labeled objects.",
         inputs=(LabelsInput,),
-        default_op="draw_mesh_between_touching_labels (clesperanto)",
+        default_op="draw_mesh_between_touching_labels (pyclesperanto_prototype)",
         default_values=[1],
         next_step_suggestions=[],
         include=("label measurement", "mesh"),
@@ -374,23 +374,41 @@ def get_name_of_function(func):
 
 def collect_from_pyclesperanto_if_installed():
     """
-    Collect all functions from clesperanto that are annotated with "in assistant"
+    Collect all functions from pyclesperanto and _prototype that are annotated with "in assistant"
     """
     from napari_time_slicer import time_slicer
-    try:
-        import pyclesperanto_prototype as cle
-    except ImportError:
-        print("Assistant skips harvesting pyclesperanto as it's not installed.")
-        return {}
 
     result = {}
+    available_already = []
 
-    for k, c in CATEGORIES.items():
-        if not callable(c):
-            if len(list(c.include)) > 0:
-                choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
-                for choice, func in choices.items():
-                    result[c.tools_menu + ">" + choice + " (clesperanto)"] = time_slicer(func)
+    try:
+        import pyclesperanto as cle
+        for k, c in CATEGORIES.items():
+            if not callable(c):
+                if len(list(c.include)) > 0:
+                    choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
+                    for choice, func in choices.items():
+                        result[c.tools_menu + ">" + choice + " (pyclesperanto)"] = time_slicer(func)
+                        available_already.append(choice)
+
+    except ImportError:
+        print("Assistant skips harvesting pyclesperanto as it's not installed.")
+
+    try:
+        import pyclesperanto_prototype as cle
+        for k, c in CATEGORIES.items():
+            if not callable(c):
+                if len(list(c.include)) > 0:
+                    choices = cle.operations(['in assistant'] + list(c.include), c.exclude)
+                    for choice, func in choices.items():
+                        if choice not in available_already:
+                            result[c.tools_menu + ">" + choice + " (pyclesperanto_prototype)"] = time_slicer(func)
+                        available_already.append(choice)
+
+    except ImportError:
+        print("Assistant skips harvesting pyclesperanto_prototype as it's not installed.")
+
+    print(available_already)
 
     return result
 
@@ -539,12 +557,13 @@ def operations_in_menu(category, search_string: str = None):
             if "NewType.<locals>.new_type" in type_annotation or \
                 "Image" in type_annotation or \
                 "LabelsData" in type_annotation or \
-                "LayerData" in type_annotation:
+                "LayerData" in type_annotation or \
+                "numpy.ndarray" in type_annotation:
                 num_image_parameters_in_function = num_image_parameters_in_function + 1
             else:
                 break
 
-        if "pyclesperanto_prototype" in func.__module__:
+        if "pyclesperanto" in func.__module__:
             # all clesperanto function have an output image which we don't pass
             num_image_parameters_in_function -= 1
 

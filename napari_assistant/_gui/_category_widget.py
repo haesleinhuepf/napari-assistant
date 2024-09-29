@@ -171,7 +171,8 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     
     args = tuple([kwargs[adapter[key]] for key in param_names])
 
-    if cle_function.__module__ == "pyclesperanto_prototype":
+    # in case of clesperanto ops, we need to inject "None" for the output
+    if "pyclesperanto" in cle_function.__module__:
         # todo: we should handle all functions equally
         gpu_out = None
 
