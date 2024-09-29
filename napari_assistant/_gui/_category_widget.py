@@ -21,10 +21,15 @@ from qtpy.QtWidgets import QPushButton, QDockWidget
 from magicgui.types import PathLike
 
 try:
-    import pyclesperanto_prototype as cle
-    Image_type = cle.Image
+    import pyclesperanto_prototype as clep
+    Image_type = clep.Image
 except:
     Image_type = np.ndarray
+try:
+    import pyclesperanto as cle
+    Image_type2 = cle.Image
+except:
+    Image_type2 = np.ndarray
 
 if TYPE_CHECKING:
     from napari.layers import Layer
@@ -75,7 +80,7 @@ category_args_bool = ["a", "b", "c", "d", "e", "f", "g","h","i","j"]
 category_args_text = ["k", "l", "m"]
 category_args_file = ["o", "p", "q"]
 
-def num_positional_args(func, types=[np.ndarray, napari.types.ImageData, napari.types.LabelsData, Image_type, int, str, float, bool]) -> int:
+def num_positional_args(func, types=[np.ndarray, napari.types.ImageData, napari.types.LabelsData, Image_type, Image_type2, int, str, float, bool]) -> int:
     params = signature(func).parameters
     return len([p for p in params.values() if p.annotation in types])
 
@@ -163,12 +168,13 @@ def call_op(op_name: str, inputs: Sequence[Layer], timepoint : int = None, viewe
     cle_function = find_function(op_name)
     nargs = num_positional_args(cle_function)
 
+
     new_sig = signature(cle_function)
     adapter = kwarg_key_adapter(cle_function)
     # get the names of positional parameters in the new operation
     param_names, _, _, _, _ = separate_argnames_by_type(
         new_sig.parameters.items())
-    
+
     args = tuple([kwargs[adapter[key]] for key in param_names])
 
     # in case of clesperanto ops, we need to inject "None" for the output
