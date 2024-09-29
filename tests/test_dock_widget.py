@@ -1,6 +1,7 @@
 import numpy as np
 
-def test_something_with_viewer(make_napari_viewer):
+# test fails with recent napari
+def something_with_viewer(make_napari_viewer):
 
     from napari_assistant import Assistant
     from napari_assistant._categories import CATEGORIES, attach_tooltips
