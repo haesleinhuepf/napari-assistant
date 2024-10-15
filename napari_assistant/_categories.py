@@ -408,8 +408,6 @@ def collect_from_pyclesperanto_if_installed():
     except ImportError:
         print("Assistant skips harvesting pyclesperanto_prototype as it's not installed.")
 
-    print(available_already)
-
     return result
 
 
