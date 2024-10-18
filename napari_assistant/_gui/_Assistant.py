@@ -296,6 +296,9 @@ class Assistant(QWidget):
             filename, _ = QFileDialog.getSaveFileName(self, "Save code as notebook...", ".", "*.ipynb")
         #return Pipeline.from_assistant(self).to_notebook(filename)
 
+        if not filename.endswith(".ipynb"):
+            filename += ".ipynb"
+
         from napari_workflows import WorkflowManager
         manager = WorkflowManager.install(self._viewer)
         code = manager.to_python_code(notebook=True, use_napari=use_napari)
