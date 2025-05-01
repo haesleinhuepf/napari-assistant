@@ -54,6 +54,7 @@ There is also a Napari plugin generator available. Check out [its documentation]
 It is recommended to install the napari-assistant via one of the plugins that use it as graphical user interface.
 You find a complete list of plugins that use the assistant [on the napari-hub](https://www.napari-hub.org/?search=napari-assistant&sort=relevance).
 Multiple of these plugins come bundled when installing [devbio-napari](https://www.napari-hub.org/plugins/devbio-napari).
+Note: This plugin is not compatible with napari 0.6.0 and later.
 
 ## For developers
 
